@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow Prompt Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a26;--border:#2a2a3d;
+    --accent:#ff4d6d;--accent2:#7c3aed;--accent3:#06b6d4;--gold:#f59e0b;
+    --text:#e8e8f0;--text-dim:#6b6b8a;--text-muted:#9999bb;--success:#10b981;
+    --glow:rgba(255,77,109,0.15);--glow2:rgba(124,58,237,0.12);
+  }
+  [data-theme="light"]{
+    --bg:#f5f4f0;--surface:#fff;--surface2:#f0eff8;--border:#d8d8ee;
+    --accent:#e02040;--accent2:#6d28d9;--accent3:#0891b2;--gold:#d97706;
+    --text:#1a1a2e;--text-dim:#888899;--text-muted:#555577;--success:#059669;
+    --glow:rgba(224,32,64,0.08);--glow2:rgba(109,40,217,0.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;transition:background .4s,color .4s;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px 80px;position:relative;z-index:1;}
+
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 16px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+  .logo-eye{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;}
+  .logo-t{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;line-height:1;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .logo-s{font-size:11px;color:var(--text-dim);font-weight:300;letter-spacing:1px;}
+  .hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .badge{background:linear-gradient(135deg,#ff4d6d22,#7c3aed22);border:1px solid var(--border);color:var(--text-muted);padding:8px 12px;border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;}
+
+  /* LANG TOGGLE */
+  .lang-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;padding:3px;gap:3px;}
+  .lang-btn{background:none;border:none;color:var(--text-muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;padding:6px 14px;border-radius:7px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .lang-btn.on{background:var(--accent);color:#fff;font-weight:700;}
+
+  /* THEME TOGGLE */
+  .tbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-family:'Space Mono',monospace;transition:all .2s;}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* SECTION LABEL */
+  .slabel{display:flex;align-items:center;gap:10px;margin-bottom:13px;}
+  .slabel .n{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent);line-height:1;opacity:.4;}
+  .slabel .t{font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:3px;text-transform:uppercase;}
+
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 26px;margin-bottom:20px;position:relative;overflow:hidden;transition:background .4s;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),transparent);opacity:0;transition:opacity .3s;}
+  .card:focus-within::before{opacity:1;}
+
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  .fld{display:flex;flex-direction:column;gap:7px;}
+  label{font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:5px;}
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;}
+  .dot.b{background:var(--accent3);}.dot.p{background:var(--accent2);}.dot.g{background:var(--gold);}.dot.gr{background:var(--success);}
+
+  input,textarea,select{background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:14px;padding:11px 13px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);}
+  select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b8a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
+  input::placeholder,textarea::placeholder{color:var(--text-dim);}
+
+  /* PRESETS */
+  .preset-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:5px;}
+  .pchip{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
+  .pchip:hover{border-color:var(--accent3);color:var(--accent3);transform:translateY(-1px);}
+  .pchip.on{border-color:var(--accent);color:var(--accent);background:var(--glow);}
+
+  /* DIALOGUE */
+  .dlg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;gap:8px;}
+  .dlg-lbl{font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  .ai-btn{background:linear-gradient(135deg,var(--accent2),var(--accent3));border:none;color:#fff;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;padding:7px 13px;border-radius:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  .ai-btn:hover{opacity:.85;transform:translateY(-1px);}
+  .ai-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .ai-btn.loading .spin{animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .dlg-list{display:flex;flex-direction:column;gap:8px;}
+  .dlg-row{display:grid;grid-template-columns:118px 1fr auto;gap:7px;align-items:start;}
+
+  /* INPUT WRAPPER for inline AI generation */
+  .dlg-input-wrap{position:relative;display:flex;align-items:center;gap:0;}
+  .dlg-input-wrap input{border-radius:10px 0 0 10px;border-right:none;flex:1;}
+  .dlg-inline-btn{background:var(--surface2);border:1px solid var(--border);border-left:none;color:var(--text-dim);padding:0 12px;height:43px;border-radius:0 10px 10px 0;cursor:pointer;font-size:14px;transition:all .2s;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:4px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;}
+  .dlg-inline-btn:hover{background:var(--accent2);border-color:var(--accent2);color:#fff;}
+  .dlg-inline-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .dlg-inline-btn.gen-loading{animation:pulse .8s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+
+  .rm-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;margin-top:3px;}
+  .rm-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .dlg-acts{display:flex;gap:8px;margin-top:9px;}
+  .add-btn{background:none;border:1px dashed var(--border);color:var(--text-dim);padding:10px;border-radius:10px;cursor:pointer;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:1px;transition:all .2s;flex:1;}
+  .add-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+  .clr-btn{background:none;border:1px dashed var(--border);color:var(--text-dim);padding:10px 15px;border-radius:10px;cursor:pointer;font-size:12px;font-family:'Space Mono',monospace;transition:all .2s;}
+  .clr-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  .ai-status{display:none;align-items:center;gap:9px;padding:11px 15px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);margin-top:10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--accent3);}
+  .ai-status.show{display:flex;}
+  .ai-dot{width:6px;height:6px;border-radius:50%;background:var(--accent3);animation:blink 1s ease-in-out infinite;}
+  .ai-dot:nth-child(2){animation-delay:.2s;}.ai-dot:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
+
+  /* PALETTE */
+  .pal-grid{display:flex;gap:7px;flex-wrap:wrap;margin-top:3px;}
+  .pal{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:8px;border:2px solid var(--border);cursor:pointer;font-size:11px;font-family:'Space Mono',monospace;color:var(--text-muted);transition:all .2s;background:var(--surface2);white-space:nowrap;}
+  .pal .sw{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+  .pal:hover{border-color:var(--accent3);color:var(--text);}
+  .pal.on{border-color:var(--accent);color:var(--text);background:var(--glow);}
+
+  /* GENERATE */
+  .gen-area{text-align:center;margin:26px 0;}
+  .gen-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;padding:18px 60px;border-radius:14px;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;box-shadow:0 8px 32px rgba(255,77,109,.3);}
+  .gen-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(255,77,109,.4);}
+  .gen-btn:active{transform:translateY(0);}
+  .gen-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.1),transparent);}
+
+  /* OUTPUT */
+  .out{display:none;}.out.on{display:block;}
+  .otabs{display:flex;gap:4px;border-bottom:1px solid var(--border);}
+  .otab{background:none;border:none;color:var(--text-dim);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px 17px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
+  .otab.on{color:var(--accent);border-bottom-color:var(--accent);}
+  .otab:hover:not(.on){color:var(--text-muted);}
+  .tcont{display:none;padding-top:20px;}.tcont.on{display:block;}
+
+  .pbox{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:13px;}
+  .ptitle{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;}
+  .ptag{display:flex;align-items:center;gap:8px;}
+  .pdot{width:8px;height:8px;border-radius:50%;}
+  .ptext{font-family:'Space Mono',monospace;font-size:12px;line-height:1.9;color:var(--text-muted);white-space:pre-wrap;word-break:break-word;}
+  .cpbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;padding:6px 13px;border-radius:6px;cursor:pointer;transition:all .2s;}
+  .cpbtn:hover{border-color:var(--success);color:var(--success);}
+  .cpbtn.cp{border-color:var(--success);color:var(--success);}
+
+  .scard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:17px 20px;margin-bottom:11px;border-left:3px solid var(--accent);}
+  .snum{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--accent);letter-spacing:2px;margin-bottom:9px;opacity:.7;}
+
+  .tip{background:linear-gradient(135deg,var(--glow),var(--glow2));border:1px solid var(--border);border-radius:12px;padding:13px 17px;margin-top:13px;font-size:12px;color:var(--text-muted);line-height:1.7;}
+  .tip strong{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent3);display:block;margin-bottom:5px;}
+
+  .div{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:5px 0 20px;}
+
+  /* LANG badge on dialogue rows */
+  .lang-badge{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:var(--accent2);color:#fff;letter-spacing:1px;margin-left:6px;opacity:.7;}
+
+  @media(max-width:680px){
+    .g2,.g3{grid-template-columns:1fr;}
+    .dlg-row{grid-template-columns:86px 1fr auto;}
+    .logo-t{font-size:26px;}
+    .gen-btn{font-size:18px;padding:16px 30px;}
+    .pal-grid{gap:5px;}.pal{padding:5px 8px;font-size:10px;}
+    .hdr-r{gap:6px;}
+    .lang-btn{padding:5px 10px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="logo-eye">Google Flow ✦</div>
+      <div class="logo-t">PROMPT GEN</div>
+      <div class="logo-s" id="logoSub">유튜브 쇼츠 사물 대화 시리즈</div>
+    </div>
+    <div class="hdr-r">
+      <div class="badge">SHORTS · 9:16</div>
+      <!-- LANGUAGE TOGGLE -->
+      <div class="lang-toggle">
+        <button class="lang-btn on" id="langKO" onclick="setLang('ko')">🇰🇷 KO</button>
+        <button class="lang-btn" id="langEN" onclick="setLang('en')">🇺🇸 EN</button>
+      </div>
+      <button class="tbtn" onclick="toggleTheme()">☀ / ☾</button>
+    </div>
+  </header>
+
+  <!-- PRESETS -->
+  <div class="slabel"><span class="n">✦</span><span class="t" id="lbl-preset">빠른 프리셋</span></div>
+  <div class="preset-row" id="presetBar"></div>
+  <div class="div"></div>
+
+  <!-- 01 OBJECTS -->
+  <div class="slabel"><span class="n">01</span><span class="t" id="lbl-obj">등장 사물 설정</span></div>
+  <div class="card">
+    <div class="g2">
+      <div class="fld"><label><span class="dot"></span> <span id="lbl-objA">사물 A (화자)</span></label><input type="text" id="objectA" placeholder="예: 커피잔" oninput="renderDlg()"/></div>
+      <div class="fld"><label><span class="dot b"></span> <span id="lbl-objB">사물 B (상대방)</span></label><input type="text" id="objectB" placeholder="예: 노트북" oninput="renderDlg()"/></div>
+      <div class="fld"><label><span class="dot p"></span> <span id="lbl-scene">배경 장소</span></label><input type="text" id="scene" placeholder="예: 사무실 책상 위, 카페, 부엌" id="scene"/></div>
+      <div class="fld"><label><span class="dot g"></span> <span id="lbl-emotion">감정 / 톤</span></label>
+        <select id="emotion"></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 DIALOGUE -->
+  <div class="slabel"><span class="n">02</span><span class="t" id="lbl-dlg">대사 시나리오</span></div>
+  <div class="card">
+    <div class="dlg-head">
+      <div class="dlg-lbl">
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block"></span>
+        <span id="lbl-dlgOrder">대사 순서</span>
+        <span id="dlgCount" style="opacity:.5;margin-left:4px">0줄</span>
+      </div>
+      <button class="ai-btn" id="aiBtnEl" onclick="autoGenDlg()"><span class="spin">✦</span> <span id="lbl-aiBtn">AI 대사 자동생성 (8줄)</span></button>
+    </div>
+    <div class="dlg-list" id="dlgList"></div>
+    <div id="aiSt" class="ai-status"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span><span id="aiStTxt">AI가 대사를 작성하는 중...</span></div>
+    <div class="dlg-acts">
+      <button class="add-btn" id="addDlgBtn" onclick="addDlgWithAI()">+ <span id="lbl-addDlg">대사 추가</span></button>
+      <button class="clr-btn" onclick="clearDlg()">✕ <span id="lbl-clrDlg">초기화</span></button>
+    </div>
+  </div>
+
+  <!-- 03 STYLE -->
+  <div class="slabel"><span class="n">03</span><span class="t" id="lbl-style">스타일 옵션</span></div>
+  <div class="card">
+    <div class="g3" style="margin-bottom:16px">
+      <div class="fld"><label><span class="dot"></span> <span id="lbl-render">렌더링 스타일</span></label>
+        <select id="renderStyle">
+          <option value="pixar">🎬 Pixar-style 3D</option>
+          <option value="pixar_dark">🌑 Pixar 3D (Dark/Moody)</option>
+          <option value="cartoon">🎨 2D Cartoon (Bold)</option>
+          <option value="cartoon_flat">🟦 2D Flat Design</option>
+          <option value="realistic">📸 Realistic Photo</option>
+          <option value="claymation">🧸 Claymation</option>
+          <option value="anime">⛩️ Anime / Manhwa</option>
+          <option value="comic">💥 Comic Book</option>
+          <option value="stopmotion">📽️ Stop Motion</option>
+          <option value="lowpoly">🔷 Low-Poly 3D</option>
+          <option value="watercolor">🖌️ Watercolor</option>
+          <option value="sketch">✏️ Pencil Sketch</option>
+          <option value="voxel">🟫 Voxel Art</option>
+          <option value="noire">🎞️ Film Noir</option>
+        </select>
+      </div>
+      <div class="fld"><label><span class="dot b"></span> <span id="lbl-camera">카메라 무브</span></label>
+        <select id="camera">
+          <option value="static_zoom">📷 Static + Zoom</option>
+          <option value="handheld">🎥 Handheld Shake</option>
+          <option value="closeup">🔍 Close-up Face</option>
+          <option value="wide">🌐 Wide Shot</option>
+          <option value="dutch">↗️ Dutch Angle</option>
+          <option value="lowangle">⬆️ Low Angle</option>
+          <option value="overthe">👁️ Over-the-shoulder</option>
+        </select>
+      </div>
+      <div class="fld"><label><span class="dot p"></span> <span id="lbl-light">조명 분위기</span></label>
+        <select id="lighting">
+          <option value="natural">☀️ Natural</option>
+          <option value="cinematic">🎬 Cinematic</option>
+          <option value="dramatic">💡 Dramatic</option>
+          <option value="neon">🌈 Neon Glow</option>
+          <option value="golden">🌅 Golden Hour</option>
+          <option value="night">🌙 Night</option>
+          <option value="studio">🔦 Studio</option>
+        </select>
+      </div>
+    </div>
+    <div class="fld" style="margin-bottom:14px">
+      <label><span class="dot gr"></span> <span id="lbl-palette">색감 팔레트</span></label>
+      <div class="pal-grid" id="palGrid"></div>
+    </div>
+    <div class="fld"><label><span class="dot g"></span> <span id="lbl-extra">추가 설정 (선택)</span></label>
+      <input type="text" id="extra" placeholder="예: 창밖에 빗소리, 배경에 식물, 연기 효과..."/>
+    </div>
+  </div>
+
+  <div class="gen-area">
+    <button class="gen-btn" onclick="genPrompts()">⚡ GENERATE PROMPTS</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="out" id="outSec">
+    <div class="slabel"><span class="n">✦</span><span class="t" id="lbl-output">생성된 프롬프트</span></div>
+    <div class="otabs">
+      <button class="otab on" onclick="swTab('image')">🖼 <span id="lbl-tab1">이미지</span></button>
+      <button class="otab" onclick="swTab('video')">🎬 <span id="lbl-tab2">동영상</span></button>
+      <button class="otab" onclick="swTab('flow')">📋 Flow <span id="lbl-tab3">가이드</span></button>
+    </div>
+    <div class="tcont on" id="tc-image">
+      <div class="pbox">
+        <div class="ptitle"><div class="ptag"><span class="pdot" style="background:var(--accent3)"></span> IMAGE GENERATION PROMPT</div><button class="cpbtn" onclick="cpP('imgP',this)">COPY</button></div>
+        <div class="ptext" id="imgP"></div>
+      </div>
+      <div class="tip"><strong id="tip1hd">💡 이미지 프롬프트 사용법</strong><span id="tip1bd">Google Flow → "Generate Image" → 프롬프트 붙여넣기 → 사물 A, B 각각 생성 후 레퍼런스로 사용</span></div>
+    </div>
+    <div class="tcont" id="tc-video">
+      <div id="vidCont"></div>
+      <div class="tip"><strong id="tip2hd">💡 동영상 프롬프트 사용법</strong><span id="tip2bd">이미지 완료 후 → Google Flow "Animate" → 각 씬 프롬프트 순서대로 적용 → 씬 연결로 쇼츠 완성</span></div>
+    </div>
+    <div class="tcont" id="tc-flow">
+      <div class="pbox">
+        <div class="ptitle"><div class="ptag"><span class="pdot" style="background:var(--gold)"></span> GOOGLE FLOW WORKFLOW</div><button class="cpbtn" onclick="cpP('flowG',this)">COPY</button></div>
+        <div class="ptext" id="flowG"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ─── LANGUAGE ───
+let lang = 'ko';
+
+const STRINGS = {
+  ko: {
+    logoSub: '유튜브 쇼츠 사물 대화 시리즈',
+    'lbl-preset': '빠른 프리셋',
+    'lbl-obj': '등장 사물 설정',
+    'lbl-objA': '사물 A (화자)',
+    'lbl-objB': '사물 B (상대방)',
+    'lbl-scene': '배경 장소',
+    'lbl-emotion': '감정 / 톤',
+    'lbl-dlg': '대사 시나리오',
+    'lbl-dlgOrder': '대사 순서',
+    'lbl-aiBtn': 'AI 대사 자동생성 (8줄)',
+    'lbl-addDlg': '대사 추가',
+    'lbl-clrDlg': '초기화',
+    'lbl-style': '스타일 옵션',
+    'lbl-render': '렌더링 스타일',
+    'lbl-camera': '카메라 무브',
+    'lbl-light': '조명 분위기',
+    'lbl-palette': '색감 팔레트',
+    'lbl-extra': '추가 설정 (선택)',
+    'lbl-output': '생성된 프롬프트',
+    'lbl-tab1': '이미지',
+    'lbl-tab2': '동영상',
+    'lbl-tab3': '가이드',
+    'tip1hd': '💡 이미지 프롬프트 사용법',
+    'tip1bd': 'Google Flow → "Generate Image" → 프롬프트 붙여넣기 → 사물 A, B 각각 생성 후 레퍼런스로 사용',
+    'tip2hd': '💡 동영상 프롬프트 사용법',
+    'tip2bd': '이미지 완료 후 → Google Flow "Animate" → 각 씬 프롬프트 순서대로 적용 → 씬 연결로 쇼츠 완성',
+    placeholderA: '예: 커피잔',
+    placeholderB: '예: 노트북',
+    placeholderScene: '예: 사무실 책상 위, 카페, 부엌',
+    placeholderExtra: '예: 창밖에 빗소리, 배경에 식물, 연기 효과...',
+    placeholderDlg: '대사를 입력하세요...',
+    countUnit: '줄',
+    aiGenerating: 'AI가 8줄 대사를 작성하는 중...',
+    aiDone: (n) => `✓ ${n}줄 대사 생성 완료!`,
+    aiFail: '⚠ 생성 실패. 다시 시도해주세요.',
+    inlineGenerating: '✦ 생성 중',
+    alertObjs: '사물 A와 B를 입력해주세요!',
+    alertDlg: '대사를 최소 1개 이상 추가해주세요!',
+    alertObjsForAI: '사물 A와 B를 먼저 입력해주세요!',
+    sceneLabel: (n,obj) => `SCENE ${n} — ${obj} 발화`,
+  },
+  en: {
+    logoSub: 'YouTube Shorts Object Dialogue Series',
+    'lbl-preset': 'Quick Presets',
+    'lbl-obj': 'Object Setup',
+    'lbl-objA': 'Object A (Speaker)',
+    'lbl-objB': 'Object B (Opponent)',
+    'lbl-scene': 'Background Scene',
+    'lbl-emotion': 'Emotion / Tone',
+    'lbl-dlg': 'Dialogue Script',
+    'lbl-dlgOrder': 'Dialogue Lines',
+    'lbl-aiBtn': 'AI Auto-Generate (8 lines)',
+    'lbl-addDlg': 'Add Line',
+    'lbl-clrDlg': 'Clear',
+    'lbl-style': 'Style Options',
+    'lbl-render': 'Render Style',
+    'lbl-camera': 'Camera Move',
+    'lbl-light': 'Lighting',
+    'lbl-palette': 'Color Palette',
+    'lbl-extra': 'Extra Notes (optional)',
+    'lbl-output': 'Generated Prompts',
+    'lbl-tab1': 'Image',
+    'lbl-tab2': 'Video',
+    'lbl-tab3': 'Guide',
+    'tip1hd': '💡 Image Prompt Guide',
+    'tip1bd': 'Google Flow → "Generate Image" → Paste prompt → Generate one image per object (A & B) as references',
+    'tip2hd': '💡 Video Prompt Guide',
+    'tip2bd': 'After image generation → Google Flow "Animate" → Apply scene prompts in order → Stitch scenes into Shorts',
+    placeholderA: 'e.g. Coffee Cup',
+    placeholderB: 'e.g. Laptop',
+    placeholderScene: 'e.g. Office desk, Café, Kitchen',
+    placeholderExtra: 'e.g. Rain outside window, plants in background, smoke effect...',
+    placeholderDlg: 'Enter dialogue line...',
+    countUnit: ' lines',
+    aiGenerating: 'AI is writing 8 dialogue lines...',
+    aiDone: (n) => `✓ ${n} lines generated!`,
+    aiFail: '⚠ Generation failed. Please try again.',
+    inlineGenerating: '✦ Writing',
+    alertObjs: 'Please enter Object A and B!',
+    alertDlg: 'Please add at least 1 dialogue line!',
+    alertObjsForAI: 'Please enter Object A and B first!',
+    sceneLabel: (n,obj) => `SCENE ${n} — ${obj.toUpperCase()} SPEAKS`,
+  },
+};
+
+const EMOTIONS_KO = [
+  {v:'angry',     l:'😤 화남 / 분노'},
+  {v:'sarcastic', l:'😏 빈정거림'},
+  {v:'dramatic',  l:'😱 극적'},
+  {v:'frustrated',l:'😩 짜증'},
+  {v:'sad',       l:'😢 슬픔'},
+  {v:'proud',     l:'🤩 자만'},
+  {v:'jealous',   l:'😒 질투'},
+  {v:'panicking', l:'😰 공황'},
+  {v:'condescending',l:'🙄 무시'},
+  {v:'betrayed',  l:'😤 배신감'},
+  {v:'competitive',l:'🔥 경쟁심'},
+];
+const EMOTIONS_EN = [
+  {v:'angry',     l:'😤 Angry / Furious'},
+  {v:'sarcastic', l:'😏 Sarcastic'},
+  {v:'dramatic',  l:'😱 Dramatic'},
+  {v:'frustrated',l:'😩 Frustrated'},
+  {v:'sad',       l:'😢 Sad'},
+  {v:'proud',     l:'🤩 Arrogant / Proud'},
+  {v:'jealous',   l:'😒 Jealous'},
+  {v:'panicking', l:'😰 Panicking'},
+  {v:'condescending',l:'🙄 Condescending'},
+  {v:'betrayed',  l:'😤 Betrayed'},
+  {v:'competitive',l:'🔥 Competitive'},
+];
+
+function S(key) { return STRINGS[lang][key] || STRINGS.ko[key] || key; }
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('langKO').classList.toggle('on', l==='ko');
+  document.getElementById('langEN').classList.toggle('on', l==='en');
+  applyStrings();
+  rebuildEmotionSelect();
+  renderDlg();
+  renderPresets();
+}
+
+function applyStrings() {
+  const ids = ['logoSub','lbl-preset','lbl-obj','lbl-objA','lbl-objB','lbl-scene','lbl-emotion',
+    'lbl-dlg','lbl-dlgOrder','lbl-aiBtn','lbl-addDlg','lbl-clrDlg','lbl-style','lbl-render',
+    'lbl-camera','lbl-light','lbl-palette','lbl-extra','lbl-output','lbl-tab1','lbl-tab2','lbl-tab3',
+    'tip1hd','tip1bd','tip2hd','tip2bd'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = S(id);
+  });
+  document.getElementById('objectA').placeholder = S('placeholderA');
+  document.getElementById('objectB').placeholder = S('placeholderB');
+  document.getElementById('scene').placeholder = S('placeholderScene');
+  document.getElementById('extra').placeholder = S('placeholderExtra');
+}
+
+function rebuildEmotionSelect() {
+  const sel = document.getElementById('emotion');
+  const cur = sel.value;
+  const opts = lang === 'en' ? EMOTIONS_EN : EMOTIONS_KO;
+  sel.innerHTML = opts.map(o=>`<option value="${o.v}"${o.v===cur?' selected':''}>${o.l}</option>`).join('');
+}
+
+// ─── THEME ───
+let dark = true;
+function toggleTheme(){dark=!dark;document.documentElement.setAttribute('data-theme',dark?'dark':'light');}
+
+// ─── PALETTES ───
+const PALS=[
+  {id:'normal',   label:'기본',       labelEn:'Default',     sw:'#f5a623',desc:''},
+  {id:'bw',       label:'흑백',       labelEn:'B&W',         sw:'#888',   desc:'Rendered in black and white only — no color, high contrast monochrome, deep dramatic shadows and bright highlights.'},
+  {id:'cyberpunk',label:'사이버펑크',  labelEn:'Cyberpunk',   sw:'#ff00ff',desc:'Cyberpunk neon color palette — neon pink, electric blue, acid yellow, deep purple. Glowing edges, rain-slicked reflective surfaces, light trails.'},
+  {id:'vintage',  label:'빈티지',     labelEn:'Vintage',     sw:'#c89b6e',desc:'Vintage film color palette — faded warm tones, sepia shadows, aged yellows, dusty browns, washed-out saturation.'},
+  {id:'pastel',   label:'파스텔',     labelEn:'Pastel',      sw:'#f9a8d4',desc:'Soft pastel color palette — muted pinks, baby blues, creamy yellows, lavender, mint. Gentle, dreamy, and soft.'},
+  {id:'neon',     label:'네온',       labelEn:'Neon',        sw:'#00ff88',desc:'Vivid neon color palette — electric green, hot pink, neon orange, cyan. Maximum saturation, glowing outlines, dark background.'},
+  {id:'gothic',   label:'다크 고딕',  labelEn:'Dark Gothic',  sw:'#6b21a8',desc:'Dark gothic color palette — deep purples, blood reds, shadow blacks, silver and bone white highlights. Ominous atmosphere.'},
+  {id:'retro80',  label:'레트로 80s', labelEn:'Retro 80s',   sw:'#fb923c',desc:'Retro 80s synthwave palette — sunset orange, hot pink, electric teal, purple gradients. VHS aesthetic, grid lines.'},
+  {id:'earthy',   label:'어스톤',     labelEn:'Earthy',      sw:'#84cc16',desc:'Earthy natural tones — olive greens, terracotta, warm clay browns, sand beige. Organic and grounded feel.'},
+  {id:'ice',      label:'아이스',     labelEn:'Ice Blue',    sw:'#67e8f9',desc:'Ice and frost color palette — icy whites, pale blues, silver chrome. Cold, crisp, crystalline look with frosted edges.'},
+  {id:'lava',     label:'용암/파이어',labelEn:'Lava/Fire',   sw:'#ef4444',desc:'Lava and fire color palette — deep reds, burning oranges, molten yellows. Intense, aggressive, scorched look.'},
+  {id:'forest',   label:'포레스트',   labelEn:'Forest',      sw:'#22c55e',desc:'Deep forest color palette — dark greens, mossy tones, rich earthy browns, dappled light filtering through leaves.'},
+  {id:'golden',   label:'골드',       labelEn:'Gold Luxury', sw:'#fbbf24',desc:'Luxury gold color palette — deep blacks, rich golds, champagne tones, gleaming metallic highlights. Opulent and prestigious.'},
+  {id:'ocean',    label:'오션',       labelEn:'Ocean Deep',  sw:'#3b82f6',desc:'Deep ocean color palette — dark navy, teal, aquamarine, coral accents. Underwater light caustics and bioluminescent hints.'},
+];
+let selPal = 'normal';
+function renderPals(){
+  document.getElementById('palGrid').innerHTML = PALS.map(p=>{
+    const lbl = lang==='en' ? p.labelEn : p.label;
+    return `<div class="pal${selPal===p.id?' on':''}" onclick="selP('${p.id}')"><span class="sw" style="background:${p.sw}"></span>${lbl}</div>`;
+  }).join('');
+}
+function selP(id){selPal=id;renderPals();}
+
+// ─── DIALOGUES ───
+let dlgs = [];
+let inlineGenCount = 0; // track ongoing inline generations
+
+function addDlg(sp='A', tx='') {
+  dlgs.push({id:Date.now()+Math.random(), sp, tx});
+  renderDlg();
+}
+
+// Smart: determine next speaker (alternates), then add and auto-generate
+async function addDlgWithAI() {
+  const A = document.getElementById('objectA').value.trim();
+  const B = document.getElementById('objectB').value.trim();
+  // Determine next speaker
+  const nextSp = dlgs.length === 0 ? 'A' : (dlgs[dlgs.length-1].sp === 'A' ? 'B' : 'A');
+  const newId = Date.now() + Math.random();
+  dlgs.push({id: newId, sp: nextSp, tx: ''});
+  renderDlg();
+
+  // Focus the new input
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.dlg-input');
+    if (inputs.length > 0) inputs[inputs.length-1].focus();
+  }, 50);
+
+  // Only auto-generate if A and B are filled
+  if (!A || !B) return;
+
+  // Trigger inline AI generation for the new row
+  await generateOneLine(newId, A, B, nextSp);
+}
+
+async function generateOneLine(rowId, A, B, sp) {
+  const dlg = dlgs.find(d => d.id === rowId);
+  if (!dlg) return;
+
+  const ek = document.getElementById('emotion').value;
+  const em = EMAP[ek];
+  const sc = document.getElementById('scene').value.trim();
+  const prevLines = dlgs.filter(d => d.id !== rowId && d.tx).map(d => `${d.sp==='A'?A:B}: "${d.tx}"`).join('\n');
+  const spName = sp === 'A' ? A : B;
+  const otherName = sp === 'A' ? B : A;
+
+  // Show loading on the specific row's inline btn
+  const rowEl = document.querySelector(`[data-rowid="${rowId}"]`);
+  if (!rowEl) return;
+  const inlineBtn = rowEl.querySelector('.dlg-inline-btn');
+  const inputEl = rowEl.querySelector('.dlg-input');
+  if (inlineBtn) { inlineBtn.disabled = true; inlineBtn.classList.add('gen-loading'); inlineBtn.textContent = S('inlineGenerating') + '...'; }
+  if (inputEl) { inputEl.placeholder = S('inlineGenerating') + '...'; inputEl.disabled = true; }
+
+  const isKo = lang === 'ko';
+  const langInstr = isKo
+    ? '반드시 한국어로 작성하세요.'
+    : 'Write the dialogue in English only.';
+
+  const prompt = `You are a YouTube Shorts object character dialogue writer.
+
+Objects: ${A} (A) vs ${B} (B)
+Scene: ${sc || 'neutral environment'}
+Emotion/Tone: ${em.en}
+Now ${spName} needs to say ONE line responding to ${otherName}.
+
+Previous dialogue so far:
+${prevLines || '(this is the first line)'}
+
+Rules:
+- ONE single line only, as ${spName}
+- Short and punchy (max 15 words)
+- Reflect the object's real-world traits cleverly
+- Fits the emotion: ${em.en}
+${langInstr}
+
+Respond ONLY with the single dialogue line, no quotes, no labels, no markdown.`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens:200, messages:[{role:'user',content:prompt}]})
+    });
+    const data = await r.json();
+    const txt = (data.content?.[0]?.text||'').trim().replace(/^["'"']|["'"']$/g,'');
+    dlg.tx = txt;
+  } catch(e) { /* silent fail */ }
+
+  renderDlg();
+  // Re-focus the input after render
+  setTimeout(() => {
+    const newRowEl = document.querySelector(`[data-rowid="${rowId}"]`);
+    if (newRowEl) {
+      const inp = newRowEl.querySelector('.dlg-input');
+      if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }
+  }, 50);
+}
+
+function rmDlg(id) { dlgs=dlgs.filter(d=>d.id!==id); renderDlg(); }
+function clearDlg() { dlgs=[]; renderDlg(); }
+function updDlg(id, f, v) { const d=dlgs.find(d=>d.id===id); if(d) d[f]=v; }
+function escA(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function renderDlg() {
+  const list = document.getElementById('dlgList');
+  const A = document.getElementById('objectA').value || (lang==='en'?'Object A':'사물 A');
+  const B = document.getElementById('objectB').value || (lang==='en'?'Object B':'사물 B');
+  const ph = S('placeholderDlg');
+  const unit = S('countUnit');
+  document.getElementById('dlgCount').textContent = dlgs.length + unit;
+
+  list.innerHTML = dlgs.map((d,i) => `
+    <div class="dlg-row" data-rowid="${d.id}">
+      <select onchange="updDlg(${d.id},'sp',this.value)"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+               color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;
+               padding:10px 11px;outline:none;appearance:none;cursor:pointer;width:100%;height:43px;">
+        <option value="A"${d.sp==='A'?' selected':''}>${A}</option>
+        <option value="B"${d.sp==='B'?' selected':''}>${B}</option>
+      </select>
+      <div class="dlg-input-wrap">
+        <input class="dlg-input" type="text" value="${escA(d.tx)}" placeholder="${ph}"
+          oninput="updDlg(${d.id},'tx',this.value)" />
+        <button class="dlg-inline-btn" title="${lang==='en'?'Re-generate this line':'이 대사 다시 생성'}"
+          onclick="regenLine(${d.id})">✦ ${lang==='en'?'Re-gen':'재생성'}</button>
+      </div>
+      <button class="rm-btn" onclick="rmDlg(${d.id})">×</button>
+    </div>`).join('');
+}
+
+async function regenLine(rowId) {
+  const A = document.getElementById('objectA').value.trim();
+  const B = document.getElementById('objectB').value.trim();
+  if (!A || !B) return;
+  const dlg = dlgs.find(d => d.id === rowId);
+  if (!dlg) return;
+  await generateOneLine(rowId, A, B, dlg.sp);
+}
+
+// ─── BULK AI AUTO GEN ───
+async function autoGenDlg() {
+  const A = document.getElementById('objectA').value.trim();
+  const B = document.getElementById('objectB').value.trim();
+  const sc = document.getElementById('scene').value.trim();
+  const ek = document.getElementById('emotion').value;
+  if (!A||!B) { alert(S('alertObjsForAI')); return; }
+  const btn = document.getElementById('aiBtnEl');
+  const st = document.getElementById('aiSt');
+  const stTxt = document.getElementById('aiStTxt');
+  btn.disabled=true; btn.classList.add('loading'); btn.innerHTML=`<span class="spin">↻</span> ${lang==='en'?'Generating...':'생성 중...'}`;
+  st.classList.add('show'); stTxt.textContent = S('aiGenerating');
+  const em = EMAP[ek];
+  const isKo = lang === 'ko';
+
+  const prompt = isKo
+    ? `당신은 유튜브 쇼츠용 사물 캐릭터 대사 작가입니다.
+
+다음 설정으로 정확히 8줄의 대화를 작성해주세요:
+- 사물 A: ${A}
+- 사물 B: ${B}
+- 배경: ${sc||'어느 장소'}
+- 감정/톤: ${em.ko} (${em.en})
+
+규칙:
+- 8줄 정확히, A→B→A→B→A→B→A→B 순서
+- 각 대사는 짧고 임팩트 있게 (한 문장, 15단어 이내)
+- 사물의 특성과 용도를 반영한 재치 있는 갈등
+- 마지막 대사는 반전이나 웃긴 결말
+- 반드시 한국어로 작성
+
+반드시 아래 JSON 배열 형식으로만 응답하세요. 마크다운 없이:
+[{"speaker":"A","text":"대사"},{"speaker":"B","text":"대사"},{"speaker":"A","text":"대사"},{"speaker":"B","text":"대사"},{"speaker":"A","text":"대사"},{"speaker":"B","text":"대사"},{"speaker":"A","text":"대사"},{"speaker":"B","text":"대사"}]`
+    : `You are a YouTube Shorts object character dialogue writer.
+
+Write exactly 8 lines of dialogue with these settings:
+- Object A: ${A}
+- Object B: ${B}
+- Background: ${sc || 'neutral environment'}
+- Emotion/Tone: ${em.en}
+
+Rules:
+- Exactly 8 lines, alternating A→B→A→B→A→B→A→B
+- Each line is short and punchy (1 sentence, max 15 words)
+- Reflect each object's real-world traits and purpose cleverly
+- Last line should have a twist or funny ending
+- Write in English only
+
+Respond ONLY with this JSON array, no markdown:
+[{"speaker":"A","text":"line"},{"speaker":"B","text":"line"},{"speaker":"A","text":"line"},{"speaker":"B","text":"line"},{"speaker":"A","text":"line"},{"speaker":"B","text":"line"},{"speaker":"A","text":"line"},{"speaker":"B","text":"line"}]`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data = await r.json();
+    const raw = data.content?.[0]?.text||'';
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if (Array.isArray(parsed)) {
+      dlgs = parsed.map(d=>({id:Date.now()+Math.random(),sp:d.speaker,tx:d.text}));
+      renderDlg();
+      stTxt.textContent = S('aiDone')(dlgs.length);
+      setTimeout(()=>st.classList.remove('show'),2000);
+    }
+  } catch(e) {
+    stTxt.textContent = S('aiFail');
+    setTimeout(()=>st.classList.remove('show'),2500);
+  }
+  btn.disabled=false; btn.classList.remove('loading');
+  btn.innerHTML=`<span class="spin">✦</span> <span id="lbl-aiBtn">${S('lbl-aiBtn')}</span>`;
+}
+
+// ─── PRESETS ───
+const PRESETS = [
+  {key:'coffee',  e:'☕', l:'커피 vs 노트북',      lEn:'Coffee vs Laptop',
+   A:'커피잔', AEn:'Coffee Cup', B:'노트북', BEn:'Laptop',
+   sc:'사무실 책상 위', scEn:'Office desk', em:'angry',
+   d:[{s:'A',t:'야, 나 없으면 네가 밤새 버틸 수 있을 것 같아?'},{s:'B',t:'넌 그냥 액체잖아. 내가 진짜 일하는 거지.'},{s:'A',t:'그래서 왜 나 다 마시면 바로 또 찾냐?'},{s:'B',t:'...그건 배터리 문제야.'},{s:'A',t:'배터리? 넌 나 없인 배터리도 못 채워.'},{s:'B',t:'와이파이가 있잖아.'},{s:'A',t:'와이파이는 나처럼 따뜻하지 않아.'},{s:'B',t:'...인정.'}],
+   dEn:[{s:'A',t:"Without me, you can't survive a single all-nighter."},{s:'B',t:"You're just liquid. I'm the one actually working."},{s:'A',t:"Then why do you look for me the second I'm gone?"},{s:'B',t:"...Battery issue."},{s:'A',t:"Battery? You can't even charge without me."},{s:'B',t:"There's WiFi."},{s:'A',t:"WiFi isn't warm like me."},{s:'B',t:"...Fair point."}]},
+  {key:'pencil',  e:'✏️', l:'연필 vs 지우개',   lEn:'Pencil vs Eraser',
+   A:'연필', AEn:'Pencil', B:'지우개', BEn:'Eraser',
+   sc:'학교 책상 위', scEn:'School desk', em:'frustrated',
+   d:[{s:'A',t:'내가 쓴 거 왜 자꾸 지워?!'},{s:'B',t:'네가 틀리게 쓰니까 내가 고쳐주는 거잖아.'},{s:'A',t:'틀린 게 아니라 수정 중이었어!'},{s:'B',t:'5번째 수정이야. 그게 틀린 거야.'},{s:'A',t:'넌 흔적도 없으면서 잘난 척은...'},{s:'B',t:'흔적 없는 게 내 능력이거든?'},{s:'A',t:'언젠간 샤프가 우릴 다 대체할 거야.'},{s:'B',t:'...나는 거기서도 필요해.'}],
+   dEn:[{s:'A',t:"Why do you keep erasing what I wrote?!"},{s:'B',t:"Because you keep writing wrong things!"},{s:'A',t:"I wasn't done! I was still revising!"},{s:'B',t:"This is the 5th revision. That means you're wrong."},{s:'A',t:"You leave no trace yet act so superior..."},{s:'B',t:"Leaving no trace IS my superpower."},{s:'A',t:"A mechanical pencil will replace us both someday."},{s:'B',t:"...They still need me."}]},
+  {key:'phone',   e:'📱', l:'스마트폰 vs 책', lEn:'Smartphone vs Book',
+   A:'스마트폰', AEn:'Smartphone', B:'책', BEn:'Book',
+   sc:'침대 위, 밤', scEn:'Bedroom, nighttime', em:'sarcastic',
+   d:[{s:'A',t:'요즘 누가 너 봐? 다 나한테 빠졌는데.'},{s:'B',t:'천 년 후에도 나는 여기 있을 거야.'},{s:'A',t:'넌 배터리도 없잖아, 어떻게 살아?'},{s:'B',t:'그게 바로 내 장점이야.'},{s:'A',t:'먼지만 쌓이고 있잖아.'},{s:'B',t:'먼지는 세월의 훈장이야.'},{s:'A',t:'...오그라들어.'},{s:'B',t:'그 말 어디서 배웠어?'}],
+   dEn:[{s:'A',t:"Who even looks at you anymore? Everyone's hooked on me."},{s:'B',t:"I'll still be here in a thousand years."},{s:'A',t:"You don't even have a battery. How do you survive?"},{s:'B',t:"That's exactly my greatest strength."},{s:'A',t:"You're just collecting dust."},{s:'B',t:"Dust is the medal of time."},{s:'A',t:"...That's so cringe."},{s:'B',t:"Where did you learn that word?"}]},
+  {key:'pizza',   e:'🍕', l:'피자 vs 샐러드', lEn:'Pizza vs Salad',
+   A:'피자', AEn:'Pizza', B:'샐러드', BEn:'Salad',
+   sc:'식당 테이블', scEn:'Restaurant table', em:'proud',
+   d:[{s:'A',t:'다들 날 시킬 때 얼마나 행복한지 알아?'},{s:'B',t:'건강을 생각하는 사람은 날 선택하지.'},{s:'A',t:'"건강하게 살기로 했어" 하고 10분 후엔 날 시키더라.'},{s:'B',t:'그건 의지력 문제야.'},{s:'A',t:'의지력? 날 보면 의지가 사라지는 거지.'},{s:'B',t:'그게 자랑이야?'},{s:'A',t:'응.'},{s:'B',t:'...나도 치즈 올려줄 수 있는데.'}],
+   dEn:[{s:"A",t:"Do you know how happy people are when they order me?"},{s:"B",t:"People who care about health choose me."},{s:"A",t:"I'm eating healthy now — then they order me 10 minutes later."},{s:"B",t:"That's a willpower issue."},{s:"A",t:"Willpower? It disappears the moment they see me."},{s:"B",t:"You're proud of that?"},{s:"A",t:"Yep."},{s:"B",t:"...I could have cheese too, you know."}]},
+  {key:'alarm',   e:'⏰', l:'알람 vs 이불',  lEn:'Alarm vs Blanket',
+   A:'알람시계', AEn:'Alarm Clock', B:'이불', BEn:'Blanket',
+   sc:'침실, 아침 6시', scEn:'Bedroom, 6am', em:'angry',
+   d:[{s:'A',t:'일어나야 해! 내가 울리는 게 다 이유가 있어!'},{s:'B',t:'5분만... 5분만 더...'},{s:'A',t:'이미 세 번 끊었잖아!'},{s:'B',t:'그건 나 때문이 아니야, 이 사람이 문제야.'},{s:'A',t:'네가 너무 따뜻하니까 못 일어나는 거잖아!'},{s:'B',t:'...그게 내 죄야?'},{s:'A',t:'응! 죄야!'},{s:'B',t:'나도 힘들어... 땀 다 흡수해야 해...'}],
+   dEn:[{s:'A',t:"You have to get up! I ring for a reason!"},{s:'B',t:"Just 5 more minutes... please..."},{s:'A',t:"You've already hit snooze three times!"},{s:'B',t:"That's not my fault. It's the human's problem."},{s:'A',t:"They can't get up because you're too warm!"},{s:'B',t:"...Is that MY fault?"},{s:'A',t:"YES! Entirely your fault!"},{s:'B',t:"I'm struggling too... I have to absorb all this sweat..."}]},
+  {key:'charger', e:'🔋', l:'충전기 vs 스마트폰', lEn:'Charger vs Phone',
+   A:'충전기', AEn:'Charger', B:'스마트폰', BEn:'Smartphone',
+   sc:'콘센트 근처', scEn:'Near the outlet', em:'dramatic',
+   d:[{s:'B',t:'제발... 살려줘... 3%야...'},{s:'A',t:'그러니까 일찍일찍 충전하랬잖아!'},{s:'B',t:'바빴단 말이야... 유튜브 봐야 했거든...'},{s:'A',t:'유튜브가 목숨보다 중요해?!'},{s:'B',t:'그 영상이... 5분짜리였거든...'},{s:'A',t:'결국 2시간 봤지?'},{s:'B',t:'...알고리즘이 나빠.'},{s:'A',t:'네가 나쁜 거야!'}],
+   dEn:[{s:'B',t:"Please... save me... I'm at 3%..."},{s:'A',t:"I TOLD you to charge earlier!"},{s:'B',t:"I was busy... I had to watch YouTube..."},{s:'A',t:"YouTube is more important than your LIFE?!"},{s:'B',t:"It was a 5-minute video..."},{s:'A',t:"And you watched for 2 hours, right?"},{s:'B',t:"...The algorithm is evil."},{s:'A',t:"YOU are the evil one!"}]},
+  {key:'scissors',e:'✂️', l:'가위 vs 종이',  lEn:'Scissors vs Paper',
+   A:'가위', AEn:'Scissors', B:'종이', BEn:'Paper',
+   sc:'공예 작업대', scEn:'Craft table', em:'condescending',
+   d:[{s:'A',t:'넌 내 앞에서 버틸 수 없어.'},{s:'B',t:'날 자를 수는 있어도 내 내용은 못 잘라.'},{s:'A',t:'내용? 그냥 낙서잖아.'},{s:'B',t:'피카소도 처음엔 낙서였어.'},{s:'A',t:'피카소는 종이를 자르지 않았거든?'},{s:'B',t:'그래서 내가 여기 있는 거야.'},{s:'A',t:'말이 많네.'},{s:'B',t:'잘라봐. 더 많아질 테니까.'}],
+   dEn:[{s:'A',t:"You can't stand against me."},{s:'B',t:"You can cut me, but you can't cut what's written on me."},{s:'A',t:"Written? That's just scribbling."},{s:'B',t:"Picasso started with scribbles too."},{s:'A',t:"Picasso didn't use scissors, did he?"},{s:'B',t:"Exactly why I'm still here."},{s:'A',t:"You talk too much."},{s:'B',t:"Cut me then. More will appear."}]},
+  {key:'mirror',  e:'🪞', l:'거울 vs 카메라', lEn:'Mirror vs Camera',
+   A:'거울', AEn:'Mirror', B:'카메라', BEn:'Camera',
+   sc:'화장대 앞', scEn:'Vanity table', em:'jealous',
+   d:[{s:'A',t:'나는 진실을 보여주는데 넌 거짓을 만들잖아.'},{s:'B',t:'보정이 나쁜 건 아니야. 자신감이 생기거든.'},{s:'A',t:'그 자신감이 가짜라는 게 문제지.'},{s:'B',t:'모두가 자기 최선의 모습을 원해.'},{s:'A',t:'나한테 오면 진짜를 볼 수 있어.'},{s:'B',t:'그래서 사람들이 나를 더 찾는 거야.'},{s:'A',t:'...'},{s:'B',t:'셀카 찍어줄까?'}],
+   dEn:[{s:'A',t:"I show the truth. You manufacture lies."},{s:'B',t:"Filters aren't lies. They build confidence."},{s:'A',t:"That confidence is fake. That's the problem."},{s:'B',t:"Everyone deserves to see their best self."},{s:'A',t:"Come to me and you'll see the real thing."},{s:'B',t:"And that's exactly why people choose me instead."},{s:'A',t:"..."},{s:'B',t:"Want me to take your selfie?"}]},
+  {key:'fork',    e:'🍴', l:'포크 vs 젓가락', lEn:'Fork vs Chopsticks',
+   A:'포크', AEn:'Fork', B:'젓가락', BEn:'Chopsticks',
+   sc:'식탁 위', scEn:'Dining table', em:'competitive',
+   d:[{s:'A',t:'나 하나면 스테이크, 파스타, 샐러드 다 된다고.'},{s:'B',t:'나는 라면, 스시, 볶음밥, 만두까지.'},{s:'A',t:'넌 두 개잖아. 나는 하나야!'},{s:'B',t:'두 개가 협력하는 거야. 혼자가 능사가 아니야.'},{s:'A',t:'그 말 서양인한테도 해봐.'},{s:'B',t:'이미 많이 배우는 중이야.'},{s:'A',t:'10년은 걸릴걸.'},{s:'B',t:'포크도 처음엔 서툴렀겠지.'}],
+   dEn:[{s:'A',t:"One of me covers steak, pasta, salad — everything."},{s:'B',t:"I cover ramen, sushi, fried rice, dumplings."},{s:'A',t:"But you're TWO pieces. I'm just ONE."},{s:'B',t:"Two working together is the point. Solo isn't always better."},{s:'A',t:"Tell that to a Westerner."},{s:'B',t:"They're learning. More every day."},{s:'A',t:"It'll take them 10 years."},{s:'B',t:"Fork was clumsy once too."}]},
+  {key:'sock',    e:'🧦', l:'왼쪽 양말 vs 오른쪽', lEn:'Left Sock vs Right Sock',
+   A:'왼쪽 양말', AEn:'Left Sock', B:'오른쪽 양말', BEn:'Right Sock',
+   sc:'서랍 속', scEn:'Inside a drawer', em:'betrayed',
+   d:[{s:'A',t:'어제 세탁기에 혼자 들어갔지?'},{s:'B',t:'나도 몰랐어! 같이 들어간 줄 알았다고!'},{s:'A',t:'나는 3일 동안 서랍에서 기다렸어.'},{s:'B',t:'미안해... 정말 몰랐어...'},{s:'A',t:'넌 항상 먼저야.'},{s:'B',t:'그게 아니라 위에 있었던 거야.'},{s:'A',t:'변명하지 마.'},{s:'B',t:'...다음엔 묶어서 들어가자.'}],
+   dEn:[{s:'A',t:"You went into the washing machine without me yesterday."},{s:'B',t:"I didn't know! I thought we went in together!"},{s:'A',t:"I waited in the drawer for THREE days."},{s:'B',t:"I'm so sorry... I genuinely didn't know..."},{s:'A',t:"You always go first."},{s:'B',t:"I was just on top. That's all."},{s:'A',t:"Don't make excuses."},{s:'B',t:"...Next time, let's go in tied together."}]},
+  {key:'icecoff', e:'🧋', l:'아이스 vs 핫커피', lEn:'Iced vs Hot Coffee',
+   A:'아이스 커피', AEn:'Iced Coffee', B:'뜨거운 커피', BEn:'Hot Coffee',
+   sc:'카페 카운터', scEn:'Café counter', em:'competitive',
+   d:[{s:'A',t:'여름엔 내가 왕이야.'},{s:'B',t:'추울 때 날 찾는 사람이 훨씬 많지.'},{s:'A',t:'에어컨 빵빵한 카페에서 날 마시는 사람 봤지?'},{s:'B',t:'그건 그냥 습관이야. 진짜 행복은 따뜻함에서 와.'},{s:'A',t:'트렌드가 누구 편인지 봐.'},{s:'B',t:'트렌드? 나는 수백 년 역사야.'},{s:'A',t:'역사가 인스타 팔로워 수는 아니잖아.'},{s:'B',t:'...요즘 애들은...'}],
+   dEn:[{s:'A',t:"In summer, I'm king."},{s:'B',t:"Far more people reach for me when it's cold."},{s:'A',t:"You've seen people drinking me in fully air-conditioned cafés?"},{s:'B',t:"That's just habit. True happiness comes from warmth."},{s:'A',t:"Look at who's on the right side of trends."},{s:'B',t:"Trends? I have centuries of history."},{s:'A',t:"History doesn't equal Instagram followers."},{s:'B',t:"...Kids these days..."}]},
+  {key:'key',     e:'🔑', l:'열쇠 vs 도어락', lEn:'Key vs Smart Lock',
+   A:'열쇠', AEn:'Key', B:'도어락', BEn:'Smart Lock',
+   sc:'현관 앞', scEn:'Front door', em:'frustrated',
+   d:[{s:'A',t:'나는 10년 동안 이 집 지켰어.'},{s:'B',t:'나는 번호 바꾸면 되는데 넌 복사될 수 있잖아.'},{s:'A',t:'복사? 나를 감히?!'},{s:'B',t:'자물쇠 가게에서 5분이면 돼.'},{s:'A',t:'그, 그건... 불법이야!'},{s:'B',t:'1234 쓰는 사람보다 안전할 수도 있어.'},{s:'A',t:'누가 1234를 써?!'},{s:'B',t:'...이 집 전 주인.'}],
+   dEn:[{s:'A',t:"I've protected this house for 10 years."},{s:'B',t:"I can change my code anytime. But you can be copied."},{s:'A',t:"Copied?! How DARE you!"},{s:'B',t:"Five minutes at any locksmith shop."},{s:'A',t:"Th-that's... illegal!"},{s:'B',t:"Still safer than someone using 1234."},{s:'A',t:"Who even uses 1234?!"},{s:'B',t:"...The previous owner of this house."}]},
+  {key:'tv',      e:'📺', l:'TV vs 리모컨',   lEn:'TV vs Remote',
+   A:'TV', AEn:'TV', B:'리모컨', BEn:'Remote Control',
+   sc:'거실 소파 앞', scEn:'Living room sofa', em:'dramatic',
+   d:[{s:'A',t:'나 없으면 네가 무슨 소용이야?'},{s:'B',t:'너도 나 없으면 채널도 못 바꾸잖아.'},{s:'A',t:'그나마 내가 더 크고 존재감 있지.'},{s:'B',t:'크기가 중요한 게 아니야. 권력이 중요하지.'},{s:'A',t:'...권력이라고?'},{s:'B',t:'내가 원하면 널 끌 수 있거든.'},{s:'A',t:'그건 협박이야!'},{s:'B',t:'그냥 사실이야.'}],
+   dEn:[{s:'A',t:"What use are you without me?"},{s:'B',t:"You can't even change channels without me."},{s:'A',t:"At least I'm bigger and more impressive."},{s:'B',t:"Size isn't the point. Power is."},{s:'A',t:"...Power?"},{s:'B',t:"I can turn you off whenever I want."},{s:'A',t:"That's a threat!"},{s:'B',t:"Just a fact."}]},
+  {key:'sun',     e:'☀️', l:'선크림 vs 태양', lEn:'Sunscreen vs Sun',
+   A:'선크림', AEn:'Sunscreen', B:'태양', BEn:'The Sun',
+   sc:'해변가', scEn:'Beach', em:'angry',
+   d:[{s:'A',t:'넌 매일 사람들한테 피해 주잖아!'},{s:'B',t:'나는 지구에 생명을 주는데?'},{s:'A',t:'그래서 내가 필요한 거잖아! 날 안 바르면 어떻게 돼?'},{s:'B',t:'...타겠지.'},{s:'A',t:'그거 봐!'},{s:'B',t:'하지만 비타민 D는?'},{s:'A',t:'그건 영양제로 해결해!'},{s:'B',t:'...세상이 너무 복잡해졌어.'}],
+   dEn:[{s:'A',t:"You hurt people every single day!"},{s:'B',t:"I give the Earth LIFE. Excuse me?"},{s:'A',t:"That's exactly why they need me! What happens without sunscreen?"},{s:'B',t:"...They burn."},{s:'A',t:"See?!"},{s:'B',t:"But what about vitamin D?"},{s:'A',t:"Supplements handle that!"},{s:'B',t:"...The world got way too complicated."}]},
+  {key:'chair',   e:'🪑', l:'의자 vs 스탠딩 책상', lEn:'Chair vs Standing Desk',
+   A:'의자', AEn:'Chair', B:'스탠딩 책상', BEn:'Standing Desk',
+   sc:'모던 사무실', scEn:'Modern office', em:'jealous',
+   d:[{s:'A',t:'걔들이 다 나를 버리고 너한테 간다고?'},{s:'B',t:'허리 건강 때문이야. 어쩔 수 없어.'},{s:'A',t:'나도 허리에 좋을 수 있어! 자세만 제대로 하면!'},{s:'B',t:'근데 아무도 자세를 제대로 안 하잖아.'},{s:'A',t:'그건 내 잘못이 아니야!'},{s:'B',t:'물론 아니지. 근데 결과는 같잖아.'},{s:'A',t:'너도 3시간 넘으면 다 앉잖아.'},{s:'B',t:'...그건 피로라고.'}],
+   dEn:[{s:'A',t:"They're ALL abandoning me for you?!"},{s:'B',t:"Back health. Nothing personal."},{s:'A',t:"I can be good for your back too! Just sit properly!"},{s:'B',t:"But nobody actually sits properly."},{s:'A',t:"That's NOT my fault!"},{s:'B',t:"Of course not. But the result is the same."},{s:'A',t:"Everyone sits after 3 hours of standing anyway."},{s:'B',t:"...That's called fatigue."}]},
+  {key:'wallet',  e:'👛', l:'지갑 vs 스마트페이', lEn:'Wallet vs Digital Pay',
+   A:'지갑', AEn:'Wallet', B:'스마트페이', BEn:'Digital Pay',
+   sc:'편의점 계산대', scEn:'Convenience store checkout', em:'sad',
+   d:[{s:'A',t:'옛날엔 나 없이는 아무것도 못 했는데...'},{s:'B',t:'세상이 바뀐 거야. 기술이 발전하면 변화가 와.'},{s:'A',t:'영수증... 카드들... 다 어떡해?'},{s:'B',t:'...영수증은 디지털로 가고 카드도 내 안에 있어.'},{s:'A',t:'그럼 나는 이제 뭐야?'},{s:'B',t:'인테리어? 아니면... 추억.'},{s:'A',t:'...그렇구나.'},{s:'B',t:'그래도 여행 갈 때 달러는 네가 필요해.'}],
+   dEn:[{s:'A',t:"Nothing worked without me once..."},{s:'B',t:"The world changed. Technology moves on."},{s:'A',t:"The receipts... the cards... what happens to them all?"},{s:'B',t:"Receipts went digital. And cards live inside me now."},{s:'A',t:"Then what am I now?"},{s:'B',t:"Decoration? Or... a memory."},{s:'A',t:"...I see."},{s:'B',t:"But when you travel abroad, they still need you for cash."}]},
+];
+
+function renderPresets() {
+  document.getElementById('presetBar').innerHTML = PRESETS.map(p => {
+    const lbl = lang==='en' ? p.lEn : p.l;
+    return `<button class="pchip" id="pc_${p.key}" onclick="loadPreset('${p.key}')">${p.e} ${lbl}</button>`;
+  }).join('');
+}
+
+function loadPreset(key) {
+  const p = PRESETS.find(x=>x.key===key); if(!p) return;
+  const isEn = lang==='en';
+  document.getElementById('objectA').value = isEn ? p.AEn : p.A;
+  document.getElementById('objectB').value = isEn ? p.BEn : p.B;
+  document.getElementById('scene').value   = isEn ? p.scEn : p.sc;
+  document.getElementById('emotion').value = p.em;
+  const src = isEn ? (p.dEn||p.d) : p.d;
+  dlgs = src.map(d=>({id:Date.now()+Math.random(), sp:d.s, tx:d.t}));
+  renderDlg();
+  document.querySelectorAll('.pchip').forEach(c=>c.classList.remove('on'));
+  document.getElementById('pc_'+key)?.classList.add('on');
+}
+
+// ─── TAB ───
+function swTab(n) {
+  document.querySelectorAll('.otab').forEach((b,i)=>b.classList.toggle('on',['image','video','flow'][i]===n));
+  document.querySelectorAll('.tcont').forEach(c=>c.classList.remove('on'));
+  document.getElementById('tc-'+n).classList.add('on');
+}
+
+// ─── COPY ───
+function cpP(id,btn) {
+  const t = document.getElementById(id).innerText||'';
+  navigator.clipboard.writeText(t).then(()=>{btn.textContent='COPIED ✓';btn.classList.add('cp');setTimeout(()=>{btn.textContent='COPY';btn.classList.remove('cp');},2000);});
+}
+function cpRaw(t,btn) {
+  navigator.clipboard.writeText(t).then(()=>{btn.textContent='COPIED ✓';btn.classList.add('cp');setTimeout(()=>{btn.textContent='COPY';btn.classList.remove('cp');},2000);});
+}
+
+// ─── MAPS ───
+const EMAP = {
+  angry:        {en:'angry',ko:'화남',audio:'Angry adult energy with scolding tone. Clear and dry sound — no echo, no reverb.'},
+  sarcastic:    {en:'sarcastic and sharp',ko:'빈정거림',audio:'Sarcastic, dry tone. Slightly condescending. Clear and calm delivery.'},
+  dramatic:     {en:'dramatically emotional',ko:'극적',audio:'Dramatic, theatrical tone with emotional peaks. Clear audio, no reverb.'},
+  frustrated:   {en:'frustrated and exasperated',ko:'짜증',audio:'Frustrated, sighing tone. Tired but sharp. Clear audio.'},
+  sad:          {en:'deeply sad',ko:'슬픔',audio:'Sad, slow delivery with emotional weight. Clear and quiet audio.'},
+  proud:        {en:'arrogantly proud',ko:'자만',audio:'Proud, boastful tone. Confident delivery. Clear audio.'},
+  jealous:      {en:'jealous and bitter',ko:'질투',audio:'Jealous, slightly bitter tone. Clear and controlled audio.'},
+  panicking:    {en:'panicking and desperate',ko:'공황',audio:'Panicked, breathless delivery. Urgent. Clear audio — no distortion.'},
+  condescending:{en:'condescending and dismissive',ko:'무시',audio:'Condescending, slow deliberate tone. Slight sneer. Clear audio.'},
+  betrayed:     {en:'betrayed and hurt',ko:'배신감',audio:'Betrayed, emotionally hurt. Trembling voice energy. Clear and raw audio.'},
+  competitive:  {en:'intensely competitive',ko:'경쟁심',audio:'Competitive, intense delivery. Driven and sharp. Clear audio.'},
+};
+const RMAP = {
+  pixar:'Pixar-style 3D render, cinematic lighting, ultra-detailed, soft shadows',
+  pixar_dark:'Pixar-style 3D render with dark moody atmosphere, dramatic shadows, deep contrast, noir lighting',
+  cartoon:'2D cartoon style, bold black outlines, vibrant saturated colors, flat cel shading',
+  cartoon_flat:'2D flat design illustration, minimal shading, clean geometric shapes, modern minimal style',
+  realistic:'photo-realistic render with natural lighting, highly detailed textures, lifelike surfaces',
+  claymation:'claymation style, soft malleable textures, fingerprint-like surfaces, warm studio lighting',
+  anime:'anime / manhwa style illustration, clean ink lines, expressive exaggerated emotions, cel shading',
+  comic:'comic book style, halftone dots, bold ink outlines, high contrast colors, speed action lines',
+  stopmotion:'stop-motion puppet animation style, tactile handmade textures, slightly jerky charm, warm lighting',
+  lowpoly:'low-poly 3D geometric style, faceted angular surfaces, abstract polygon shapes, clean vector look',
+  watercolor:'soft watercolor illustration, paint bleed edges, paper texture visible, gentle color washes',
+  sketch:'detailed pencil sketch style, crosshatching shading, rough hand-drawn lines, graphite texture',
+  voxel:'voxel art style, pixel-perfect 3D cubes, retro game aesthetic, bright block colors',
+  noire:'film noir style, black and white with high contrast, dramatic shadows, 1940s cinematic look',
+};
+const CMAP = {
+  static_zoom:'Camera mostly static with a slight slow zoom-in toward the character.',
+  handheld:"Slight handheld camera shake, giving a raw, real-time feel.",
+  closeup:"Tight close-up on the character's face, filling the frame.",
+  wide:'Wide shot showing the full scene context.',
+  dutch:'Dutch angle tilt shot — camera slightly rotated to create tension and unease.',
+  lowangle:'Low angle shot looking up at the character — making them feel imposing and threatening.',
+  overthe:'Over-the-shoulder style, implying a conversation partner just out of frame.',
+};
+const LMAP = {
+  natural:'naturally lit environment, soft diffused daylight',
+  cinematic:'cinematic three-point lighting with dramatic key light and soft fill',
+  dramatic:'dramatic hard lighting with deep shadows and sharp highlights',
+  neon:'neon glow ambient lighting, colored light spill, cyberpunk atmosphere',
+  golden:'golden hour warm lighting, long soft shadows, amber tones',
+  night:'low-light night scene, practical light sources only, deep shadows',
+  studio:'clean studio lighting, even illumination, neutral background tones',
+};
+
+// ─── GENERATE PROMPTS ───
+function genPrompts() {
+  const A  = document.getElementById('objectA').value.trim();
+  const B  = document.getElementById('objectB').value.trim();
+  const sc = document.getElementById('scene').value.trim();
+  const ek = document.getElementById('emotion').value;
+  const rk = document.getElementById('renderStyle').value;
+  const ck = document.getElementById('camera').value;
+  const lk = document.getElementById('lighting').value;
+  const ex = document.getElementById('extra').value.trim();
+  if (!A||!B) { alert(S('alertObjs')); return; }
+  if (dlgs.length===0) { alert(S('alertDlg')); return; }
+
+  const em=EMAP[ek], rs=RMAP[rk], cs=CMAP[ck], ls=LMAP[lk];
+  const sd = sc || 'a neutral environment';
+  const ex2 = ex ? '\n'+ex+'.' : '';
+  const pal = PALS.find(p=>p.id===selPal);
+  const ps = pal&&pal.desc ? '\n'+pal.desc : '';
+
+  // IMAGE PROMPT
+  document.getElementById('imgP').textContent = [
+    `A ${A} with an angry human face —`,
+    `deeply furrowed brows, gritted teeth, bulging cartoon eyes.`,
+    `Two thin, simple cartoon arms growing directly from the sides of its body —`,
+    `slim, not muscular, subtle in color, matching the object's tone.`,
+    `One arm pointing aggressively at the viewer,`,
+    `the other arm raised in a ${em.en} scolding gesture.`,
+    `No legs. No feet. The character sits or rests naturally on its own base without floating.`,
+    `Realistic ${A} texture with natural surface details.`,
+    `Scene: ${sd} — ${ls}.${ex2}${ps}`,
+    `${rs}, vertical 9:16 format.`,
+  ].join('\n');
+
+  // VIDEO PROMPTS
+  const vc = document.getElementById('vidCont'); vc.innerHTML='';
+  const grps = chunkDlg(dlgs);
+  grps.forEach((grp,i) => {
+    const isA = grp[0].sp==='A';
+    const spName = isA ? A : B;
+    const lines = [
+      `Animate this character with ${em.en} upper-body movement.`,
+      `The character is shouting:`,
+      ...grp.map(d=>`"${d.tx}"`), ``,
+      `Movements are slow and deliberate — not fast or frantic.`,
+      `Gestures follow the emotion and rhythm of the dialogue naturally:`,
+      `pointing one finger directly at the camera when accusing,`,
+      `raising both open palms in a "why would you do that" gesture`,
+      `when expressing frustration or disbelief.`,
+      `Gestures should feel reactive and conversational, not mechanical or repetitive.`,
+      `Mouth opens and closes as if speaking ${em.en}.`,
+      `Eyebrows furrow deeply, eyes express ${em.en} emotion.`,
+      `The character stays grounded — no floating or jumping.`,
+      cs, `${rs}, ${ls}.${ps}`, ``,
+      `Audio: ${em.audio}`,
+      `No roaring, no monster sounds, no creature sounds.`,
+      `No text, no subtitles, no captions appearing in the video.`,
+      `The character's face must remain as the object —`,
+      `do NOT replace or morph into a real human face.`,
+    ].join('\n');
+    const card = document.createElement('div'); card.className='scard';
+    card.innerHTML=`<div class="snum">${S('sceneLabel')(i+1,spName)}</div><div style="display:flex;justify-content:flex-end;margin-bottom:9px"><button class="cpbtn" onclick="cpRaw(this.dataset.text,this)">COPY</button></div><div class="ptext">${esc(lines)}</div>`;
+    card.querySelector('.cpbtn').dataset.text = lines;
+    vc.appendChild(card);
+  });
+
+  // FLOW GUIDE
+  const isEn = lang==='en';
+  const palLabel = lang==='en' ? pal?.labelEn : pal?.label;
+  document.getElementById('flowG').textContent = isEn ? [
+    `STEP 1 — Generate Reference Images`,
+    `└ Google Flow → "Generate Image"`,
+    `└ Copy prompt from [Image tab] and paste`,
+    `└ Generate 1 image for ${A}`,
+    `└ Replace object name with "${B}" → generate 1 more image`,
+    `└ Style: ${rk} | Color: ${palLabel} | Lighting: ${lk}`, ``,
+    `STEP 2 — Generate Scene Videos (${grps.length} scenes total)`,
+    `└ Google Flow → "Animate Image"`,
+    `└ Upload the reference image for each character`,
+    `└ Apply prompts from [Video tab] Scene 1 → Scene ${grps.length} in order`,
+    ...grps.map((g,i)=>`└ Scene ${i+1}: ${g[0].sp==='A'?A:B} speaks — "${g[0].tx.slice(0,20)}..."`), ``,
+    `STEP 3 — Connect Scenes & Edit`,
+    `└ Link scenes in Google Flow timeline`,
+    `└ Cut transition between scenes (0.2~0.5s)`,
+    `└ Add captions: dialogue text, bottom of frame`, ``,
+    `STEP 4 — Audio & Final Polish`,
+    `└ Voiceover per scene: TTS or recorded`,
+    `└ BGM: match ${em.en} mood (volume 15~20%)`,
+    `└ Final format: 9:16 vertical, 15~45 seconds`,
+    `└ Hashtags: #ObjectDialogue #Shorts #${A}vs${B} #Animation`, ``,
+    `※ Important`,
+    `└ Always include the final warning line in prompts`,
+    `   to prevent faces morphing into real human faces`,
+    `└ Recommended scene duration: 2~5 seconds`,
+    `└ Apply same palette desc (${palLabel}) to all scenes`,
+  ].join('\n') : [
+    `STEP 1 — 레퍼런스 이미지 생성`,
+    `└ Google Flow → "Generate Image"`,
+    `└ [이미지 탭] 프롬프트 복사 후 붙여넣기`,
+    `└ ${A}용 이미지 1장 생성`,
+    `└ "${B}"로 교체 후 ${B}용 이미지 1장 생성`,
+    `└ 스타일: ${rk} | 색감: ${palLabel} | 조명: ${lk}`, ``,
+    `STEP 2 — 씬별 동영상 생성 (총 ${grps.length}개 씬)`,
+    `└ Google Flow → "Animate Image"`,
+    `└ 해당 사물의 레퍼런스 이미지 업로드`,
+    `└ [동영상 탭] Scene 1 프롬프트부터 순서대로 적용`,
+    ...grps.map((g,i)=>`└ Scene ${i+1}: ${g[0].sp==='A'?A:B} 발화 — "${g[0].tx.slice(0,18)}..."`), ``,
+    `STEP 3 — 씬 연결 & 편집`,
+    `└ Google Flow 타임라인에서 씬 순서대로 연결`,
+    `└ 씬 사이 컷 전환 (0.2~0.5초)`,
+    `└ 자막: 한국어 대사, 화면 하단 배치`, ``,
+    `STEP 4 — 오디오 & 최종 마무리`,
+    `└ 각 씬 보이스: TTS 또는 직접 녹음`,
+    `└ 배경음: ${em.ko} 감정에 맞는 BGM (볼륨 15~20%)`,
+    `└ 최종 포맷: 9:16 세로형, 15~45초`,
+    `└ 해시태그: #사물대화 #쇼츠 #${A}vs${B} #애니메이션`, ``,
+    `※ 주의사항`,
+    `└ 캐릭터 얼굴이 실제 사람 얼굴로 대체되지 않도록`,
+    `   프롬프트 마지막 경고문 반드시 포함할 것`,
+    `└ 씬당 영상 길이: 2~5초 권장`,
+    `└ 색감(${palLabel}) 유지를 위해 모든 씬에 동일 팔레트 설명 포함`,
+  ].join('\n');
+
+  document.getElementById('outSec').classList.add('on');
+  document.getElementById('outSec').scrollIntoView({behavior:'smooth',block:'start'});
+  swTab('image');
+}
+
+function chunkDlg(list) {
+  const gs=[]; let cur=[];
+  list.forEach(d=>{
+    if(cur.length===0){cur.push(d);}
+    else if(cur[0].sp!==d.sp||cur.length>=2){gs.push(cur);cur=[d];}
+    else{cur.push(d);}
+  });
+  if(cur.length>0) gs.push(cur);
+  return gs;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ─── INIT ───
+window.onload = () => {
+  renderPresets();
+  renderPals();
+  rebuildEmotionSelect();
+  applyStrings();
+  // Start with 2 empty rows
+  addDlg('A','');
+  addDlg('B','');
+};
+</script>
+</body>
+</html>
