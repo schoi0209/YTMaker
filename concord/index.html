@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concord Central — B1 Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── DARK MODE (default) ── */
+  :root {
+    --bg: #0e0e0c;
+    --bg2: #141412;
+    --surface: #1a1a17;
+    --border: #2a2a26;
+    --gold: #c9a96e;
+    --gold-light: #e8c98a;
+    --cream: #f0ead8;
+    --muted: #7a7a6e;
+    --text: #e8e4d8;
+    --accent: #8fa88a;
+    --row-border: rgba(42,42,38,0.6);
+    --toggle-track: #2a2a26;
+    --toggle-thumb: #c9a96e;
+  }
+  /* ── LIGHT MODE ── */
+  :root.light {
+    --bg: #f7f4ee;
+    --bg2: #fffdf8;
+    --surface: #f0ece2;
+    --border: #ddd8cc;
+    --gold: #9a6f30;
+    --gold-light: #7a5520;
+    --cream: #1a1814;
+    --muted: #8a8070;
+    --text: #2e2a22;
+    --accent: #4a7045;
+    --row-border: rgba(200,190,170,0.5);
+    --toggle-track: #ddd8cc;
+    --toggle-thumb: #9a6f30;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { transition: background 0.3s, color 0.3s; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+
+  header { padding: 48px 60px 36px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; background: var(--bg2); position: sticky; top: 0; z-index: 100; transition: background 0.3s, border-color 0.3s; }
+  .logo-block h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 300; color: var(--cream); letter-spacing: 0.04em; line-height: 1; transition: color 0.3s; }
+  .logo-block .sub { font-size: 0.65rem; color: var(--gold); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 6px; transition: color 0.3s; }
+
+  .header-right { display: flex; align-items: flex-end; gap: 40px; }
+  .header-stats { display: flex; gap: 40px; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; }
+  .header-stats span strong { display: block; color: var(--gold-light); font-size: 1.1rem; font-family: 'Cormorant Garamond', serif; font-weight: 400; margin-bottom: 2px; transition: color 0.3s; }
+
+  /* ── THEME TOGGLE ── */
+  .theme-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding-bottom: 2px; }
+  .theme-toggle .icon { font-size: 0.9rem; transition: opacity 0.3s; }
+  .toggle-track { width: 40px; height: 22px; background: var(--toggle-track); border-radius: 11px; position: relative; transition: background 0.3s; border: 1px solid var(--border); }
+  .toggle-thumb { width: 16px; height: 16px; background: var(--toggle-thumb); border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.25s cubic-bezier(.4,0,.2,1), background 0.3s; }
+  :root.light .toggle-thumb { transform: translateX(18px); }
+
+  .filter-bar { padding: 28px 60px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; transition: background 0.3s, border-color 0.3s; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-group label { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); transition: color 0.3s; }
+  select, input[type="text"], input[type="number"] { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.78rem; padding: 8px 14px; outline: none; transition: border-color 0.2s, background 0.3s, color 0.3s; appearance: none; -webkit-appearance: none; min-width: 130px; }
+  select:focus, input:focus { border-color: var(--gold); }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a7a6e'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+  :root.light select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a8070'/%3E%3C/svg%3E"); }
+  .price-range { display: flex; align-items: center; gap: 8px; }
+  .price-range input { min-width: 110px; }
+  .price-range span { color: var(--muted); font-size: 0.7rem; }
+  .filter-reset { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; padding: 8px 16px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+  .filter-reset:hover { border-color: var(--gold); color: var(--gold); }
+
+  .results-info { padding: 16px 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.08em; transition: border-color 0.3s; }
+  .results-info .count strong { color: var(--gold); transition: color 0.3s; }
+  .sort-options { display: flex; gap: 20px; }
+  .sort-btn { background: none; border: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: color 0.2s; padding: 0; }
+  .sort-btn:hover, .sort-btn.active { color: var(--gold); }
+  .sort-btn.active::after { content: ' ↓'; }
+  .sort-btn.active.asc::after { content: ' ↑'; }
+
+  .table-wrapper { padding: 0 60px 60px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 24px; }
+  thead th { text-align: left; padding: 10px 16px; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 400; transition: color 0.3s, border-color 0.3s; }
+  tbody tr { border-bottom: 1px solid var(--row-border); transition: background 0.15s; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: 13px 16px; white-space: nowrap; vertical-align: middle; }
+  .apt-number { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; color: var(--cream); font-weight: 400; transition: color 0.3s; }
+  .price-cell { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; color: var(--gold-light); font-weight: 400; transition: color 0.3s; }
+  .psm-cell { color: var(--muted); font-size: 0.7rem; }
+  .level-badge { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+  .bed-tag { display: inline-block; padding: 2px 8px; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .bed-1 { background: rgba(143,168,138,0.12); color: var(--accent); border: 1px solid rgba(143,168,138,0.2); }
+  .bed-2 { background: rgba(201,169,110,0.1); color: var(--gold); border: 1px solid rgba(201,169,110,0.2); }
+  .bed-3 { background: rgba(180,120,100,0.1); color: #c8907a; border: 1px solid rgba(180,120,100,0.2); }
+  :root.light .bed-3 { color: #9a5a44; }
+  .bed-4 { background: rgba(140,100,200,0.1); color: #b09ad0; border: 1px solid rgba(140,100,200,0.2); }
+  :root.light .bed-4 { color: #6a4a9a; }
+  .aspect-cell { color: var(--text); font-size: 0.72rem; }
+  .feature-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 4px; }
+  .no-results { text-align: center; padding: 80px 20px; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.1em; }
+  .no-results .icon { font-family: 'Cormorant Garamond', serif; font-size: 3rem; color: var(--border); display: block; margin-bottom: 16px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  tbody tr { animation: fadeIn 0.18s ease forwards; }
+  @media (max-width: 768px) {
+    header { padding: 24px 20px 20px; flex-direction: column; align-items: flex-start; gap: 16px; }
+    .header-right { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .filter-bar, .results-info { padding: 20px; }
+    .table-wrapper { padding: 0 20px 40px; }
+    .logo-block h1 { font-size: 1.6rem; }
+    .header-stats { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-block">
+    <h1>Concord Central</h1>
+    <div class="sub">1 King Street, Concord West &nbsp;·&nbsp; Tower B1 &nbsp;·&nbsp; Feb 2026 Pricing</div>
+  </div>
+  <div class="header-right">
+    <div class="header-stats">
+      <span><strong id="stat-total">—</strong>Total Units</span>
+      <span><strong id="stat-from">—</strong>From (AUD)</span>
+      <span><strong id="stat-avg">—</strong>Avg $/m²</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark mode">
+      <span class="icon">☀️</span>
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span class="icon">🌙</span>
+    </div>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Search</label>
+    <input type="text" id="search" placeholder="Apt No / Level / Aspect…" style="min-width:200px">
+  </div>
+  <div class="filter-group">
+    <label>Bedrooms</label>
+    <select id="filter-bed">
+      <option value="">All</option>
+      <option value="1 BED">1 Bed</option>
+      <option value="1 BED +">1 Bed + Study</option>
+      <option value="2 BED">2 Bed</option>
+      <option value="2 BED +">2 Bed + Study</option>
+      <option value="3 BED">3 Bed</option>
+      <option value="3 BED +">3 Bed + Study</option>
+      <option value="4 BED +">4 Bed +</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Level</label>
+    <select id="filter-level"><option value="">All Levels</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Aspect</label>
+    <select id="filter-aspect"><option value="">All Aspects</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Price Range (AUD)</label>
+    <div class="price-range">
+      <input type="number" id="price-min" placeholder="Min" step="50000">
+      <span>—</span>
+      <input type="number" id="price-max" placeholder="Max" step="50000">
+    </div>
+  </div>
+  <div class="filter-group">
+    <label>Parking</label>
+    <select id="filter-parking">
+      <option value="">Any</option>
+      <option value="yes">Included</option>
+    </select>
+  </div>
+  <button class="filter-reset" onclick="resetFilters()">↺ Reset</button>
+</div>
+
+<div class="results-info">
+  <div class="count">Showing <strong id="result-count">—</strong> apartments</div>
+  <div class="sort-options">
+    <span style="color:var(--border);margin-right:4px">Sort:</span>
+    <button class="sort-btn" id="sort-price" onclick="sortBy('price')">Price</button>
+    <button class="sort-btn" id="sort-level" onclick="sortBy('level')">Level</button>
+    <button class="sort-btn" id="sort-size" onclick="sortBy('size')">Size</button>
+    <button class="sort-btn" id="sort-psm" onclick="sortBy('psm')">$/m²</button>
+  </div>
+</div>
+
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Apt No.</th>
+        <th>Level</th>
+        <th>Bedrooms</th>
+        <th>Aspect</th>
+        <th>Internal m²</th>
+        <th>Balcony m²</th>
+        <th>Total m²</th>
+        <th>Parking</th>
+        <th>Features</th>
+        <th>Price/m²</th>
+        <th>Price (AUD)</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+  <div id="no-results" class="no-results" style="display:none">
+    <span class="icon">∅</span>
+    No apartments match your search criteria.
+  </div>
+</div>
+
+<script>
+const raw = [
+  ["B1-01.01","LEVEL 1","3 BED +","North-East",99,12,111,"Yes","MPR, Study",18181.82,1800000],
+  ["B1-01.02","LEVEL 1","1 BED","East",50,9,59,"—","",14200,710000],
+  ["B1-01.03","LEVEL 1","1 BED","East",52,9,61,"—","",14038.46,730000],
+  ["B1-01.04","LEVEL 1","1 BED +","East",53,13,66,"Yes","",14716.98,780000],
+  ["B1-01.05","LEVEL 1","3 BED","South-East",111,16,127,"Yes","Intergenerational",17207.21,1910000],
+  ["B1-01.06","LEVEL 1","2 BED +","South-West",89,12,101,"Yes","",15505.62,1380000],
+  ["B1-01.07","LEVEL 1","1 BED +","West",59,9,68,"Yes","",13728.81,810000],
+  ["B1-01.08","LEVEL 1","2 BED","West",78,15,93,"Yes","MPR",16153.85,1260000],
+  ["B1-01.09","LEVEL 1","1 BED","West",52,11,63,"—","",13365.38,695000],
+  ["B1-01.10","LEVEL 1","2 BED","North-West",77,10,87,"Yes","",16623.38,1280000],
+  ["B1-02.01","LEVEL 2","3 BED +","North-East",99,12,111,"Yes","MPR, Study",18282.83,1810000],
+  ["B1-02.02","LEVEL 2","1 BED","East",50,9,59,"—","",14300,715000],
+  ["B1-02.03","LEVEL 2","1 BED","East",52,9,61,"—","",14134.62,735000],
+  ["B1-02.04","LEVEL 2","1 BED +","East",53,13,66,"Yes","",14811.32,785000],
+  ["B1-02.05","LEVEL 2","3 BED","South-East",111,16,127,"Yes","Intergenerational",17297.3,1920000],
+  ["B1-02.06","LEVEL 2","2 BED +","South-West",89,12,101,"Yes","",15617.98,1390000],
+  ["B1-02.07","LEVEL 2","1 BED +","West",59,9,68,"Yes","",13813.56,815000],
+  ["B1-02.08","LEVEL 2","2 BED","West",78,15,93,"Yes","MPR",16282.05,1270000],
+  ["B1-02.09","LEVEL 2","1 BED","West",52,11,63,"—","",13461.54,700000],
+  ["B1-02.10","LEVEL 2","2 BED","North-West",77,10,87,"Yes","",16753.25,1290000],
+  ["B1-03.01","LEVEL 3","3 BED +","North-East",99,12,111,"Yes","MPR, Study",18383.84,1820000],
+  ["B1-03.02","LEVEL 3","1 BED","East",50,9,59,"—","",14400,720000],
+  ["B1-03.03","LEVEL 3","1 BED","East",52,9,61,"—","",14230.77,740000],
+  ["B1-03.04","LEVEL 3","1 BED +","East",53,13,66,"Yes","",14905.66,790000],
+  ["B1-03.05","LEVEL 3","3 BED","South-East",111,16,127,"Yes","Intergenerational",17387.39,1930000],
+  ["B1-03.06","LEVEL 3","2 BED +","South-West",89,12,101,"Yes","",15730.34,1400000],
+  ["B1-03.07","LEVEL 3","1 BED +","West",59,9,68,"Yes","",13898.31,820000],
+  ["B1-03.08","LEVEL 3","2 BED","West",78,15,93,"Yes","MPR",16410.26,1280000],
+  ["B1-03.09","LEVEL 3","1 BED","West",52,11,63,"—","",13557.69,705000],
+  ["B1-03.10","LEVEL 3","2 BED","North-West",77,10,87,"Yes","",16883.12,1300000],
+  ["B1-05.01","LEVEL 5","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23232.32,2300000],
+  ["B1-05.02","LEVEL 5","2 BED +","East",82,12,94,"Yes","",17317.07,1420000],
+  ["B1-05.03","LEVEL 5","2 BED","East",84,10,94,"—","",17738.1,1490000],
+  ["B1-05.04","LEVEL 5","3 BED","South-East",106,17,123,"Yes","Intergenerational",21226.42,2250000],
+  ["B1-05.05","LEVEL 5","3 BED","South-West",106,16,122,"Yes","",14622.64,1550000],
+  ["B1-05.06","LEVEL 5","2 BED","West",78,13,91,"Yes","",16666.67,1300000],
+  ["B1-05.07","LEVEL 5","1 BED","West",52,10,62,"—","",13653.85,710000],
+  ["B1-05.08","LEVEL 5","2 BED","North-West",76,11,87,"Yes","",17236.84,1310000],
+  ["B1-06.01","LEVEL 6","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23333.33,2310000],
+  ["B1-06.02","LEVEL 6","2 BED +","East",82,12,94,"Yes","",17439.02,1430000],
+  ["B1-06.03","LEVEL 6","2 BED","East",84,10,94,"—","",17857.14,1500000],
+  ["B1-06.04","LEVEL 6","3 BED","South-East",106,17,123,"Yes","Intergenerational",21320.75,2260000],
+  ["B1-06.05","LEVEL 6","3 BED","South-West",106,16,122,"Yes","",14716.98,1560000],
+  ["B1-06.06","LEVEL 6","2 BED","West",78,13,91,"Yes","",16794.87,1310000],
+  ["B1-06.07","LEVEL 6","1 BED","West",52,10,62,"—","",13750,715000],
+  ["B1-06.08","LEVEL 6","2 BED","North-West",76,11,87,"Yes","",17368.42,1320000],
+  ["B1-07.01","LEVEL 7","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23434.34,2320000],
+  ["B1-07.02","LEVEL 7","2 BED +","East",82,12,94,"Yes","",17560.98,1440000],
+  ["B1-07.03","LEVEL 7","2 BED","East",84,10,94,"—","",17976.19,1510000],
+  ["B1-07.04","LEVEL 7","3 BED","South-East",106,17,123,"Yes","Intergenerational",21415.09,2270000],
+  ["B1-07.05","LEVEL 7","3 BED","South-West",106,16,122,"Yes","",14811.32,1570000],
+  ["B1-07.06","LEVEL 7","2 BED","West",78,13,91,"Yes","",16923.08,1320000],
+  ["B1-07.07","LEVEL 7","1 BED","West",52,10,62,"—","",13846.15,720000],
+  ["B1-07.08","LEVEL 7","2 BED","North-West",76,11,87,"Yes","",17500,1330000],
+  ["B1-08.01","LEVEL 8","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23535.35,2330000],
+  ["B1-08.02","LEVEL 8","2 BED +","East",82,12,94,"Yes","",17682.93,1450000],
+  ["B1-08.03","LEVEL 8","2 BED","East",84,10,94,"—","",18095.24,1520000],
+  ["B1-08.04","LEVEL 8","3 BED","South-East",106,17,123,"Yes","Intergenerational",21509.43,2280000],
+  ["B1-08.05","LEVEL 8","3 BED","South-West",106,16,122,"Yes","",14905.66,1580000],
+  ["B1-08.06","LEVEL 8","2 BED","West",78,13,91,"Yes","",17051.28,1330000],
+  ["B1-08.07","LEVEL 8","1 BED","West",52,10,62,"—","",13942.31,725000],
+  ["B1-08.08","LEVEL 8","2 BED","North-West",76,11,87,"Yes","",17631.58,1340000],
+  ["B1-09.01","LEVEL 9","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23636.36,2340000],
+  ["B1-09.02","LEVEL 9","2 BED +","East",82,12,94,"Yes","",17804.88,1460000],
+  ["B1-09.03","LEVEL 9","2 BED","East",84,10,94,"—","",18214.29,1530000],
+  ["B1-09.04","LEVEL 9","3 BED","South-East",106,17,123,"Yes","Intergenerational",21603.77,2290000],
+  ["B1-09.05","LEVEL 9","3 BED","South-West",106,16,122,"Yes","",15000,1590000],
+  ["B1-09.06","LEVEL 9","2 BED","West",78,13,91,"Yes","",17179.49,1340000],
+  ["B1-09.07","LEVEL 9","1 BED","West",52,10,62,"—","",14038.46,730000],
+  ["B1-09.08","LEVEL 9","2 BED","North-West",76,11,87,"Yes","",17763.16,1350000],
+  ["B1-10.01","LEVEL 10","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23737.37,2350000],
+  ["B1-10.02","LEVEL 10","2 BED +","East",82,12,94,"Yes","",17926.83,1470000],
+  ["B1-10.03","LEVEL 10","2 BED","East",84,10,94,"—","",18333.33,1540000],
+  ["B1-10.04","LEVEL 10","3 BED","South-East",106,17,123,"Yes","Intergenerational",21698.11,2300000],
+  ["B1-10.05","LEVEL 10","3 BED","South-West",106,16,122,"Yes","",15094.34,1600000],
+  ["B1-10.06","LEVEL 10","2 BED","West",78,13,91,"Yes","",17307.69,1350000],
+  ["B1-10.07","LEVEL 10","1 BED","West",52,10,62,"—","",14134.62,735000],
+  ["B1-10.08","LEVEL 10","2 BED","North-West",76,11,87,"Yes","",17894.74,1360000],
+  ["B1-11.01","LEVEL 11","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23838.38,2360000],
+  ["B1-11.02","LEVEL 11","2 BED +","East",82,12,94,"Yes","",18048.78,1480000],
+  ["B1-11.03","LEVEL 11","2 BED","East",84,10,94,"—","",18452.38,1550000],
+  ["B1-11.04","LEVEL 11","3 BED","South-East",106,17,123,"Yes","Intergenerational",21792.45,2310000],
+  ["B1-11.05","LEVEL 11","3 BED","South-West",106,16,122,"Yes","",15188.68,1610000],
+  ["B1-11.06","LEVEL 11","2 BED","West",78,13,91,"Yes","",17435.9,1360000],
+  ["B1-11.07","LEVEL 11","1 BED","West",52,10,62,"—","",14230.77,740000],
+  ["B1-11.08","LEVEL 11","2 BED","North-West",76,11,87,"Yes","",18026.32,1370000],
+  ["B1-12.01","LEVEL 12","3 BED +","North-East",99,12,111,"Yes","MPR, Study",23939.39,2370000],
+  ["B1-12.02","LEVEL 12","2 BED +","East",82,12,94,"Yes","",18170.73,1490000],
+  ["B1-12.03","LEVEL 12","2 BED","East",84,10,94,"—","",18571.43,1560000],
+  ["B1-12.04","LEVEL 12","3 BED","South-East",106,17,123,"Yes","Intergenerational",21886.79,2320000],
+  ["B1-12.05","LEVEL 12","3 BED","South-West",106,16,122,"Yes","",15283.02,1620000],
+  ["B1-12.06","LEVEL 12","2 BED","West",78,13,91,"Yes","",17564.1,1370000],
+  ["B1-12.07","LEVEL 12","1 BED","West",52,10,62,"—","",14326.92,745000],
+  ["B1-12.08","LEVEL 12","2 BED","North-West",76,11,87,"Yes","",18157.89,1380000],
+  ["B1-13.01","LEVEL 13","3 BED +","North-East",99,12,111,"Yes","MPR, Study",24040.4,2380000],
+  ["B1-13.02","LEVEL 13","2 BED +","East",82,12,94,"Yes","",18292.68,1500000],
+  ["B1-13.03","LEVEL 13","2 BED","East",84,10,94,"—","",18690.48,1570000],
+  ["B1-13.04","LEVEL 13","3 BED","South-East",106,17,123,"Yes","Intergenerational",21981.13,2330000],
+  ["B1-13.05","LEVEL 13","3 BED","South-West",106,16,122,"Yes","",15377.36,1630000],
+  ["B1-13.06","LEVEL 13","2 BED","West",78,13,91,"Yes","",17692.31,1380000],
+  ["B1-13.07","LEVEL 13","1 BED","West",52,10,62,"—","",14423.08,750000],
+  ["B1-13.08","LEVEL 13","2 BED","North-West",76,11,87,"Yes","",18289.47,1390000],
+  ["B1-14.01","LEVEL 14","3 BED +","North-East",99,12,111,"Yes","MPR, Study",24141.41,2390000],
+  ["B1-14.02","LEVEL 14","2 BED +","East",82,12,94,"Yes","",18414.63,1510000],
+  ["B1-14.03","LEVEL 14","2 BED","East",84,10,94,"—","",18809.52,1580000],
+  ["B1-14.04","LEVEL 14","3 BED","South-East",106,17,123,"Yes","Intergenerational",22075.47,2340000],
+  ["B1-14.05","LEVEL 14","3 BED","South-West",106,16,122,"Yes","",15471.7,1640000],
+  ["B1-14.06","LEVEL 14","2 BED","West",78,13,91,"Yes","",17820.51,1390000],
+  ["B1-14.07","LEVEL 14","1 BED","West",52,10,62,"—","",14519.23,755000],
+  ["B1-14.08","LEVEL 14","2 BED","North-West",76,11,87,"Yes","",18421.05,1400000],
+  ["B1-15.01","LEVEL 15","3 BED +","North-East",99,12,111,"Yes","MPR, Study",24242.42,2400000],
+  ["B1-15.02","LEVEL 15","2 BED +","East",82,12,94,"Yes","",18536.59,1520000],
+  ["B1-15.03","LEVEL 15","2 BED","East",84,10,94,"—","",18928.57,1590000],
+  ["B1-15.04","LEVEL 15","3 BED","South-East",106,17,123,"Yes","Intergenerational",22169.81,2350000],
+  ["B1-15.05","LEVEL 15","3 BED","South-West",106,16,122,"Yes","",15566.04,1650000],
+  ["B1-15.06","LEVEL 15","2 BED","West",78,13,91,"Yes","",17948.72,1400000],
+  ["B1-15.07","LEVEL 15","1 BED","West",52,10,62,"—","",14615.38,760000],
+  ["B1-15.08","LEVEL 15","2 BED","North-West",76,11,87,"Yes","",18552.63,1410000],
+  ["B1-16.01","LEVEL 16","3 BED +","North-East",99,12,111,"Yes","MPR, Study",24343.43,2410000],
+  ["B1-16.02","LEVEL 16","2 BED +","East",82,12,94,"Yes","",18658.54,1530000],
+  ["B1-16.03","LEVEL 16","2 BED","East",84,10,94,"—","",19047.62,1600000],
+  ["B1-16.04","LEVEL 16","3 BED","South-East",106,17,123,"Yes","Intergenerational",22264.15,2360000],
+  ["B1-16.05","LEVEL 16","3 BED","South-West",106,16,122,"Yes","",15660.38,1660000],
+  ["B1-16.06","LEVEL 16","2 BED","West",78,13,91,"Yes","",18076.92,1410000],
+  ["B1-16.07","LEVEL 16","1 BED","West",52,10,62,"—","",14711.54,765000],
+  ["B1-16.08","LEVEL 16","2 BED","North-West",76,11,87,"Yes","",18684.21,1420000],
+  ["B1-17.01","LEVEL 17","3 BED +","North-East",99,12,111,"Yes","MPR, Study",24444.44,2420000],
+  ["B1-17.02","LEVEL 17","2 BED +","East",82,12,94,"Yes","",18780.49,1540000],
+  ["B1-17.03","LEVEL 17","2 BED","East",84,10,94,"—","",19166.67,1610000],
+  ["B1-17.04","LEVEL 17","3 BED","South-East",106,17,123,"Yes","Intergenerational",22358.49,2370000],
+  ["B1-17.05","LEVEL 17","3 BED","South-West",106,16,122,"Yes","",15754.72,1670000],
+  ["B1-17.06","LEVEL 17","2 BED","West",78,13,91,"Yes","",18205.13,1420000],
+  ["B1-17.07","LEVEL 17","1 BED","West",52,10,62,"—","",14807.69,770000],
+  ["B1-17.08","LEVEL 17","2 BED","North-West",76,11,87,"Yes","",18815.79,1430000],
+  ["B1-18.01","LEVEL 18","3 BED +","North-East",99,12,111,"Yes","MPR, Study",24545.45,2430000],
+  ["B1-18.02","LEVEL 18","2 BED +","East",82,12,94,"Yes","",18902.44,1550000],
+  ["B1-18.03","LEVEL 18","2 BED","East",84,10,94,"—","",19285.71,1620000],
+  ["B1-18.04","LEVEL 18","3 BED","South-East",106,17,123,"Yes","Intergenerational",22452.83,2380000],
+  ["B1-18.05","LEVEL 18","3 BED","South-West",106,16,122,"Yes","",15849.06,1680000],
+  ["B1-18.06","LEVEL 18","2 BED","West",78,13,91,"Yes","",18333.33,1430000],
+  ["B1-18.07","LEVEL 18","1 BED","West",52,10,62,"—","",14903.85,775000],
+  ["B1-18.08","LEVEL 18","2 BED","North-West",76,11,87,"Yes","",18947.37,1440000],
+  ["B1-19.01","LEVEL 19","3 BED +","North-East",99,12,111,"Yes","MPR, Study",25656.57,2540000],
+  ["B1-19.02","LEVEL 19","2 BED +","East",82,12,94,"Yes","",19024.39,1560000],
+  ["B1-19.03","LEVEL 19","2 BED","East",84,10,94,"—","",19404.76,1630000],
+  ["B1-19.04","LEVEL 19","3 BED","South-East",106,17,123,"Yes","Intergenerational",23490.57,2490000],
+  ["B1-19.05","LEVEL 19","3 BED","South-West",106,16,122,"Yes","",15943.4,1690000],
+  ["B1-19.06","LEVEL 19","2 BED","West",78,13,91,"Yes","",18461.54,1440000],
+  ["B1-19.07","LEVEL 19","1 BED","West",52,10,62,"—","",15000,780000],
+  ["B1-19.08","LEVEL 19","2 BED","North-West",76,11,87,"Yes","",19078.95,1450000],
+  ["B1-20.01","LEVEL 20","3 BED +","North-East",99,12,111,"Yes","MPR, Study",25757.58,2550000],
+  ["B1-20.02","LEVEL 20","2 BED +","East",82,12,94,"Yes","",19146.34,1570000],
+  ["B1-20.03","LEVEL 20","2 BED","East",84,10,94,"—","",19523.81,1640000],
+  ["B1-20.04","LEVEL 20","3 BED","South-East",106,17,123,"Yes","Intergenerational",23584.91,2500000],
+  ["B1-20.05","LEVEL 20","3 BED","South-West",104,16,120,"Yes","MPR",16346.15,1700000],
+  ["B1-20.08","LEVEL 20","2 BED","North-West",76,11,87,"Yes","",19210.53,1460000],
+  ["B1-21.01","LEVEL 21","3 BED +","North-East",99,12,111,"Yes","MPR, Study",25858.59,2560000],
+  ["B1-21.02","LEVEL 21","2 BED +","East",82,12,94,"Yes","",19268.29,1580000],
+  ["B1-21.03","LEVEL 21","2 BED","East",84,10,94,"—","",19880.95,1670000],
+  ["B1-21.04","LEVEL 21","3 BED","South-East",106,17,123,"Yes","Intergenerational",23679.25,2510000],
+  ["B1-21.05","LEVEL 21","3 BED","South-West",104,16,120,"Yes","MPR",16442.31,1710000],
+  ["B1-21.06","LEVEL 21","2 BED","West",78,13,91,"Yes","",18717.95,1460000],
+  ["B1-21.07","LEVEL 21","1 BED","West",52,10,62,"—","",15192.31,790000],
+  ["B1-21.08","LEVEL 21","2 BED","North-West",76,11,87,"Yes","",19342.11,1470000],
+  ["B1-22.01","LEVEL 22","3 BED +","North-East",99,12,111,"Yes","MPR, Study",25959.6,2570000],
+  ["B1-22.02","LEVEL 22","2 BED +","East",82,12,94,"Yes","",19390.24,1590000],
+  ["B1-22.03","LEVEL 22","2 BED","East",84,10,94,"—","",20000,1680000],
+  ["B1-22.04","LEVEL 22","3 BED","South-East",106,17,123,"Yes","Intergenerational",23773.58,2520000],
+  ["B1-22.05","LEVEL 22","3 BED","South-West",104,16,120,"Yes","MPR",16538.46,1720000],
+  ["B1-22.06","LEVEL 22","2 BED","West",78,13,91,"Yes","",18846.15,1470000],
+  ["B1-22.07","LEVEL 22","1 BED","West",52,10,62,"—","",15288.46,795000],
+  ["B1-22.08","LEVEL 22","2 BED","North-West",76,11,87,"Yes","",19473.68,1480000],
+  ["B1-23.01","LEVEL 23","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26060.61,2580000],
+  ["B1-23.02","LEVEL 23","2 BED +","East",82,12,94,"Yes","",19512.2,1600000],
+  ["B1-23.03","LEVEL 23","2 BED","East",84,10,94,"—","",20119.05,1690000],
+  ["B1-23.04","LEVEL 23","3 BED","South-East",106,17,123,"Yes","Intergenerational",23867.92,2530000],
+  ["B1-23.05","LEVEL 23","3 BED","South-West",104,16,120,"Yes","MPR",17019.23,1770000],
+  ["B1-23.06","LEVEL 23","2 BED","West",78,13,91,"Yes","",18974.36,1480000],
+  ["B1-23.07","LEVEL 23","1 BED","West",52,10,62,"—","",15384.62,800000],
+  ["B1-23.08","LEVEL 23","2 BED","North-West",76,11,87,"Yes","",19605.26,1490000],
+  ["B1-24.01","LEVEL 24","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26161.62,2590000],
+  ["B1-24.02","LEVEL 24","2 BED +","East",82,12,94,"Yes","",19634.15,1610000],
+  ["B1-24.03","LEVEL 24","2 BED","East",84,10,94,"—","",20238.1,1700000],
+  ["B1-24.04","LEVEL 24","3 BED","South-East",106,17,123,"Yes","Intergenerational",23962.26,2540000],
+  ["B1-24.05","LEVEL 24","3 BED","South-West",104,16,120,"Yes","MPR",17115.38,1780000],
+  ["B1-24.06","LEVEL 24","2 BED","West",78,13,91,"Yes","",19102.56,1490000],
+  ["B1-24.07","LEVEL 24","1 BED","West",52,10,62,"—","",15480.77,805000],
+  ["B1-24.08","LEVEL 24","2 BED","North-West",76,11,87,"Yes","",19736.84,1500000],
+  ["B1-25.01","LEVEL 25","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26262.63,2600000],
+  ["B1-25.02","LEVEL 25","2 BED +","East",82,12,94,"Yes","",19756.1,1620000],
+  ["B1-25.03","LEVEL 25","2 BED","East",84,10,94,"—","",20357.14,1710000],
+  ["B1-25.04","LEVEL 25","3 BED","South-East",106,17,123,"Yes","Intergenerational",24056.6,2550000],
+  ["B1-25.05","LEVEL 25","3 BED","South-West",104,16,120,"Yes","MPR",17211.54,1790000],
+  ["B1-25.06","LEVEL 25","2 BED","West",78,13,91,"Yes","",19230.77,1500000],
+  ["B1-25.07","LEVEL 25","1 BED","West",52,10,62,"—","",15576.92,810000],
+  ["B1-25.08","LEVEL 25","2 BED","North-West",76,11,87,"Yes","",19868.42,1510000],
+  ["B1-26.01","LEVEL 26","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26363.64,2610000],
+  ["B1-26.02","LEVEL 26","2 BED +","East",82,12,94,"Yes","",19878.05,1630000],
+  ["B1-26.03","LEVEL 26","2 BED","East",84,10,94,"—","",20476.19,1720000],
+  ["B1-26.04","LEVEL 26","3 BED","South-East",106,17,123,"Yes","Intergenerational",24150.94,2560000],
+  ["B1-26.05","LEVEL 26","3 BED","South-West",104,16,120,"Yes","MPR",17307.69,1800000],
+  ["B1-26.06","LEVEL 26","2 BED","West",78,13,91,"Yes","",19358.97,1510000],
+  ["B1-26.07","LEVEL 26","1 BED","West",52,10,62,"—","",15673.08,815000],
+  ["B1-26.08","LEVEL 26","2 BED","North-West",76,11,87,"Yes","",20000,1520000],
+  ["B1-27.01","LEVEL 27","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26464.65,2620000],
+  ["B1-27.02","LEVEL 27","2 BED +","East",82,12,94,"Yes","",20000,1640000],
+  ["B1-27.03","LEVEL 27","2 BED","East",84,10,94,"—","",20595.24,1730000],
+  ["B1-27.04","LEVEL 27","3 BED","South-East",106,17,123,"Yes","Intergenerational",24245.28,2570000],
+  ["B1-27.05","LEVEL 27","3 BED","South-West",104,16,120,"Yes","MPR",17403.85,1810000],
+  ["B1-27.06","LEVEL 27","2 BED","West",78,13,91,"Yes","",19487.18,1520000],
+  ["B1-27.07","LEVEL 27","1 BED","West",52,10,62,"—","",15769.23,820000],
+  ["B1-27.08","LEVEL 27","2 BED","North-West",76,11,87,"Yes","",20131.58,1530000],
+  ["B1-28.01","LEVEL 28","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26565.66,2630000],
+  ["B1-28.02","LEVEL 28","2 BED +","East",82,12,94,"Yes","",20121.95,1650000],
+  ["B1-28.03","LEVEL 28","2 BED","East",84,10,94,"—","",20714.29,1740000],
+  ["B1-28.04","LEVEL 28","3 BED","South-East",106,17,123,"Yes","Intergenerational",24339.62,2580000],
+  ["B1-28.05","LEVEL 28","3 BED","South-West",104,16,120,"Yes","MPR",17500,1820000],
+  ["B1-28.06","LEVEL 28","2 BED","West",78,13,91,"Yes","",19615.38,1530000],
+  ["B1-28.07","LEVEL 28","1 BED","West",52,10,62,"—","",15865.38,825000],
+  ["B1-28.08","LEVEL 28","2 BED","North-West",76,11,87,"Yes","",20263.16,1540000],
+  ["B1-29.01","LEVEL 29","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26666.67,2640000],
+  ["B1-29.02","LEVEL 29","2 BED +","East",82,12,94,"Yes","",20243.9,1660000],
+  ["B1-29.03","LEVEL 29","2 BED","East",84,10,94,"—","",20833.33,1750000],
+  ["B1-29.04","LEVEL 29","3 BED","South-East",106,17,123,"Yes","Intergenerational",24433.96,2590000],
+  ["B1-29.05","LEVEL 29","3 BED","South-West",104,16,120,"Yes","MPR",17596.15,1830000],
+  ["B1-29.06","LEVEL 29","2 BED","West",78,13,91,"Yes","",19743.59,1540000],
+  ["B1-29.07","LEVEL 29","1 BED","West",52,10,62,"—","",16442.31,855000],
+  ["B1-29.08","LEVEL 29","2 BED","North-West",76,11,87,"Yes","",20657.89,1570000],
+  ["B1-30.01","LEVEL 30","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26767.68,2650000],
+  ["B1-30.02","LEVEL 30","2 BED +","East",82,12,94,"Yes","",20365.85,1670000],
+  ["B1-30.03","LEVEL 30","2 BED","East",84,10,94,"—","",20952.38,1760000],
+  ["B1-30.04","LEVEL 30","3 BED","South-East",106,17,123,"Yes","Intergenerational",24528.3,2600000],
+  ["B1-30.05","LEVEL 30","3 BED","South-West",104,16,120,"Yes","MPR",17692.31,1840000],
+  ["B1-30.06","LEVEL 30","2 BED","West",78,13,91,"Yes","",19871.79,1550000],
+  ["B1-30.07","LEVEL 30","1 BED","West",52,10,62,"—","",16538.46,860000],
+  ["B1-30.08","LEVEL 30","2 BED","North-West",76,11,87,"Yes","",20789.47,1580000],
+  ["B1-31.01","LEVEL 31","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26868.69,2660000],
+  ["B1-31.02","LEVEL 31","2 BED +","East",82,12,94,"Yes","",20487.8,1680000],
+  ["B1-31.03","LEVEL 31","2 BED","East",84,10,94,"—","",21071.43,1770000],
+  ["B1-31.04","LEVEL 31","3 BED","South-East",106,17,123,"Yes","Intergenerational",24622.64,2610000],
+  ["B1-31.05","LEVEL 31","3 BED","South-West",104,16,120,"Yes","MPR",17788.46,1850000],
+  ["B1-31.06","LEVEL 31","2 BED","West",78,13,91,"Yes","",20000,1560000],
+  ["B1-31.07","LEVEL 31","1 BED","West",52,10,62,"—","",16634.62,865000],
+  ["B1-31.08","LEVEL 31","2 BED","North-West",76,11,87,"Yes","",20921.05,1590000],
+  ["B1-32.01","LEVEL 32","3 BED +","North-East",99,12,111,"Yes","MPR, Study",26969.7,2670000],
+  ["B1-32.02","LEVEL 32","2 BED +","East",82,12,94,"Yes","",20609.76,1690000],
+  ["B1-32.03","LEVEL 32","2 BED","East",84,10,94,"—","",21190.48,1780000],
+  ["B1-32.04","LEVEL 32","3 BED","South-East",106,17,123,"Yes","Intergenerational",24716.98,2620000],
+  ["B1-32.05","LEVEL 32","3 BED","South-West",104,16,120,"Yes","MPR",17884.62,1860000],
+  ["B1-32.06","LEVEL 32","2 BED","West",78,13,91,"Yes","",20128.21,1570000],
+  ["B1-32.07","LEVEL 32","1 BED","West",52,10,62,"—","",16730.77,870000],
+  ["B1-32.08","LEVEL 32","2 BED","North-West",76,11,87,"Yes","",21052.63,1600000],
+  ["B1-33.01","LEVEL 33","4 BED +","North-East",137,12,152,"Yes","",25255.47,3460000],
+  ["B1-33.02","LEVEL 33","3 BED +","East",116,21,146,"Yes","",27844.83,3230000],
+  ["B1-33.03","LEVEL 33","3 BED","South-East",106,17,123,"Yes","Intergenerational",24528.3,2600000],
+  ["B1-33.04","LEVEL 33","3 BED +","South-West",104,17,121,"Yes","",18173.08,1890000],
+  ["B1-33.05","LEVEL 33","2 BED","West",78,13,91,"Yes","",20384.62,1590000],
+  ["B1-33.06","LEVEL 33","3 BED +","North-West",141,13,154,"Yes","",19148.94,2700000],
+  ["B1-34.01","LEVEL 34","4 BED +","North-East",137,12,152,"Yes","",25401.46,3480000],
+  ["B1-34.02","LEVEL 34","3 BED +","East",116,21,146,"Yes","",27931.03,3240000],
+  ["B1-34.03","LEVEL 34","3 BED","South-East",106,17,123,"Yes","Intergenerational",24622.64,2610000],
+  ["B1-34.04","LEVEL 34","3 BED +","South-West",104,17,121,"Yes","",18269.23,1900000],
+  ["B1-34.05","LEVEL 34","2 BED","West",78,13,91,"Yes","",20512.82,1600000],
+  ["B1-34.06","LEVEL 34","3 BED +","North-West",141,13,154,"Yes","",19219.86,2710000],
+  ["B1-35.01","LEVEL 35","4 BED +","North-East",137,12,152,"Yes","",25547.45,3500000],
+  ["B1-35.02","LEVEL 35","3 BED +","East",116,21,146,"Yes","",28017.24,3250000],
+  ["B1-35.03","LEVEL 35","3 BED","South-East",106,17,123,"Yes","Intergenerational",24716.98,2620000],
+  ["B1-35.04","LEVEL 35","3 BED +","South-West",104,17,121,"Yes","",18365.38,1910000],
+  ["B1-35.05","LEVEL 35","2 BED","West",78,13,91,"Yes","",20641.03,1610000],
+  ["B1-35.06","LEVEL 35","3 BED +","North-West",141,13,154,"Yes","",19290.78,2720000],
+  ["B1-36.01","LEVEL 36","4 BED +","North-East",141,12,153,"Yes","",24964.54,3520000],
+  ["B1-36.02","LEVEL 36","3 BED +","East",116,21,146,"Yes","",28103.45,3260000],
+  ["B1-36.03","LEVEL 36","3 BED","South-East",106,17,123,"Yes","Intergenerational",24811.32,2630000],
+  ["B1-36.04","LEVEL 36","4 BED +","South-West",160,20,193,"Yes","",20625,3300000],
+  ["B1-36.05","LEVEL 36","4 BED +","North-West",161,13,174,"Yes","",20186.34,3250000],
+  ["B1-37.01","LEVEL 37","4 BED +","East-North-West",233,106,339,"Yes","Penthouse",27897,6500000],
+];
+
+let sortField = null;
+let sortAsc = true;
+let filtered = [...raw];
+
+function levelNum(s) { const m = s.match(/\d+/); return m ? parseInt(m[0]) : 0; }
+function fmtPrice(n) { return '$' + n.toLocaleString('en-AU'); }
+function fmtPsm(n) { return '$' + Math.round(n).toLocaleString('en-AU'); }
+function bedClass(bed) {
+  if (bed.startsWith('4')) return 'bed-4';
+  if (bed.startsWith('3')) return 'bed-3';
+  if (bed.startsWith('2')) return 'bed-2';
+  return 'bed-1';
+}
+
+function populateFilters() {
+  const levels = [...new Set(raw.map(r => r[1]))].sort((a,b) => levelNum(a)-levelNum(b));
+  const sel = document.getElementById('filter-level');
+  levels.forEach(l => { const o = document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+  const aspects = [...new Set(raw.map(r => r[3]))].sort();
+  const sel2 = document.getElementById('filter-aspect');
+  aspects.forEach(a => { const o = document.createElement('option'); o.value=a; o.textContent=a; sel2.appendChild(o); });
+}
+
+function applyFilters() {
+  const search = document.getElementById('search').value.toLowerCase().trim();
+  const bed = document.getElementById('filter-bed').value;
+  const level = document.getElementById('filter-level').value;
+  const aspect = document.getElementById('filter-aspect').value;
+  const priceMin = parseFloat(document.getElementById('price-min').value) || 0;
+  const priceMax = parseFloat(document.getElementById('price-max').value) || Infinity;
+  const parking = document.getElementById('filter-parking').value;
+  filtered = raw.filter(r => {
+    if (search && !r[0].toLowerCase().includes(search) && !r[1].toLowerCase().includes(search) && !r[3].toLowerCase().includes(search)) return false;
+    if (bed && !r[2].startsWith(bed)) return false;
+    if (level && r[1] !== level) return false;
+    if (aspect && r[3] !== aspect) return false;
+    if (r[10] < priceMin || r[10] > priceMax) return false;
+    if (parking === 'yes' && r[7] !== 'Yes') return false;
+    return true;
+  });
+  if (sortField) { filtered.sort((a,b) => { let va,vb; if(sortField==='price'){va=a[10];vb=b[10];}else if(sortField==='level'){va=levelNum(a[1]);vb=levelNum(b[1]);}else if(sortField==='size'){va=a[6];vb=b[6];}else{va=a[9];vb=b[9];} return sortAsc?va-vb:vb-va; }); }
+  render();
+}
+
+function sortBy(field) {
+  if (sortField === field) sortAsc = !sortAsc;
+  else { sortField = field; sortAsc = true; }
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active','asc'));
+  const btn = document.getElementById('sort-'+field);
+  btn.classList.add('active');
+  if (!sortAsc) btn.classList.add('asc');
+  applyFilters();
+}
+
+function render() {
+  const tbody = document.getElementById('table-body');
+  const noRes = document.getElementById('no-results');
+  document.getElementById('result-count').textContent = filtered.length;
+  if (!filtered.length) { tbody.innerHTML=''; noRes.style.display='block'; return; }
+  noRes.style.display = 'none';
+  tbody.innerHTML = filtered.map((r, i) => `
+    <tr style="animation-delay:${Math.min(i,25)*10}ms">
+      <td class="apt-number">${r[0]}</td>
+      <td class="level-badge">${r[1]}</td>
+      <td><span class="bed-tag ${bedClass(r[2])}">${r[2]}</span></td>
+      <td class="aspect-cell">${r[3]}</td>
+      <td>${r[4]}</td>
+      <td>${r[5]}</td>
+      <td><strong>${r[6]}</strong></td>
+      <td>${r[7]==='Yes'?'<span class="feature-dot"></span>Yes':'<span style="color:#2a2a26">—</span>'}</td>
+      <td style="color:var(--muted);font-size:0.68rem">${r[8]||'—'}</td>
+      <td class="psm-cell">${fmtPsm(r[9])}</td>
+      <td class="price-cell">${fmtPrice(r[10])}</td>
+    </tr>
+  `).join('');
+
+  const prices = raw.map(r=>r[10]);
+  const psms = raw.map(r=>r[9]);
+  document.getElementById('stat-total').textContent = raw.length;
+  document.getElementById('stat-from').textContent = fmtPrice(Math.min(...prices));
+  document.getElementById('stat-avg').textContent = fmtPsm(psms.reduce((a,b)=>a+b,0)/psms.length)+'/m²';
+}
+
+function resetFilters() {
+  ['search','price-min','price-max'].forEach(id => document.getElementById(id).value='');
+  ['filter-bed','filter-level','filter-aspect','filter-parking'].forEach(id => document.getElementById(id).value='');
+  filtered=[...raw]; sortField=null;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active','asc'));
+  render();
+}
+
+['search','filter-bed','filter-level','filter-aspect','price-min','price-max','filter-parking'].forEach(id => {
+  document.getElementById(id).addEventListener('input', applyFilters);
+  document.getElementById(id).addEventListener('change', applyFilters);
+});
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Restore saved preference
+if (localStorage.getItem('theme') === 'light') {
+  document.documentElement.classList.add('light');
+}
+
+populateFilters();
+render();
+</script>
+</body>
+</html>
